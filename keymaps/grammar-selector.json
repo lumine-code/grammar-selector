@@ -1,5 +1,8 @@
 {
-  "atom-text-editor": {
-    "ctrl-L": "grammar-selector:show"
+  // :not([mini]) because it sets the file's grammar, and a mini editor has no
+  // file of its own. `ctrl-L` was an uppercase primary key, which is an
+  // implicit shift spelled the confusing way.
+  "atom-text-editor:not([mini])": {
+    "ctrl-shift-l": "grammar-selector:show"
   }
 }
