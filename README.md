@@ -15,7 +15,7 @@ To install `grammar-selector` search for _grammar-selector_ in the Install pane 
 
 ## Commands
 
-Commands available in `atom-text-editor`:
+Commands available in `atom-workspace`:
 
 - `grammar-selector:show`: open the grammar picker for the current editor.
 

@@ -11,10 +11,16 @@
     }
   ],
   "context-menu": {
-    ".overlayer": [
+    "atom-text-editor:not([mini])": [
+      {
+        "type": "separator"
+      },
       {
         "label": "Change Grammar",
         "command": "grammar-selector:show"
+      },
+      {
+        "type": "separator"
       }
     ]
   }
