@@ -2,28 +2,30 @@ const path = require("path");
 
 function setConfigForLanguageMode(mode) {
   let useTreeSitterParsers = mode !== "textmate";
-  atom.config.set("language.useTreeSitterParsers", useTreeSitterParsers);
+  lumine.config.set("language.useTreeSitterParsers", useTreeSitterParsers);
 }
 
 describe("GrammarSelector", () => {
   let [editor, textGrammar, jsGrammar] = [];
 
   beforeEach(async () => {
-    jasmine.attachToDOM(atom.views.getView(atom.workspace));
-    atom.config.set("grammar-selector.showOnRightSideOfStatusBar", false);
-    atom.config.set("grammar-selector.hideDuplicateTextMateGrammars", false);
+    jasmine.attachToDOM(lumine.views.getView(lumine.workspace));
+    lumine.config.set("grammar-selector.showOnRightSideOfStatusBar", false);
+    lumine.config.set("grammar-selector.hideDuplicateTextMateGrammars", false);
 
-    await atom.packages.activatePackage("status-bar");
-    await atom.packages.activatePackage("grammar-selector");
-    await atom.packages.activatePackage("language-text");
-    await atom.packages.activatePackage("language-javascript");
-    await atom.packages.activatePackage(path.join(__dirname, "fixtures", "language-with-no-name"));
+    await lumine.packages.activatePackage("status-bar");
+    await lumine.packages.activatePackage("grammar-selector");
+    await lumine.packages.activatePackage("language-text");
+    await lumine.packages.activatePackage("language-javascript");
+    await lumine.packages.activatePackage(
+      path.join(__dirname, "fixtures", "language-with-no-name"),
+    );
 
-    editor = await atom.workspace.open(path.join(__dirname, "fixtures", "sample.js"));
+    editor = await lumine.workspace.open(path.join(__dirname, "fixtures", "sample.js"));
 
-    textGrammar = atom.grammars.grammarForScopeName("text.plain");
+    textGrammar = lumine.grammars.grammarForScopeName("text.plain");
     expect(textGrammar).toBeTruthy();
-    jsGrammar = atom.grammars.grammarForScopeName("source.js");
+    jsGrammar = lumine.grammars.grammarForScopeName("source.js");
     expect(jsGrammar).toBeTruthy();
     expect(editor.getGrammar()).toBe(jsGrammar);
 
@@ -34,7 +36,7 @@ describe("GrammarSelector", () => {
     it("displays a list of all the available grammars", async () => {
       const grammarView = (await getGrammarView(editor)).element;
 
-      let allGrammars = atom.grammars
+      let allGrammars = lumine.grammars
         .getGrammars({ includeTreeSitter: true })
         .filter((g) => g.name);
 
@@ -45,8 +47,8 @@ describe("GrammarSelector", () => {
       expect(grammarView.textContent.includes("source.a")).toBe(false);
       grammarView
         .querySelectorAll("li")
-        .forEach((li) => expect(li.textContent).not.toBe(atom.grammars.nullGrammar.name));
-      if (!atom.config.get("grammar-selector.hideDuplicateTextMateGrammars")) {
+        .forEach((li) => expect(li.textContent).not.toBe(lumine.grammars.nullGrammar.name));
+      if (!lumine.config.get("grammar-selector.hideDuplicateTextMateGrammars")) {
         expect(grammarView.textContent.includes("Tree-sitter")).toBe(true); // check we are showing and labelling Tree-sitter grammars
       }
     }));
@@ -55,7 +57,7 @@ describe("GrammarSelector", () => {
     it("marks the matched characters in the rendered row", async () => {
       const view = await getGrammarView(editor);
       view.refs.queryEditor.setText("jav");
-      await atom.views.getNextUpdatePromise();
+      await lumine.views.getNextUpdatePromise();
 
       const matched = view.element.querySelectorAll("li .character-match");
       expect(matched.length).toBeGreaterThan(0);
@@ -99,14 +101,14 @@ describe("GrammarSelector", () => {
 
   describe("when the editor's current grammar is the null grammar", () =>
     it("displays Auto Detect as the selected grammar", async () => {
-      editor.setGrammar(atom.grammars.nullGrammar);
+      editor.setGrammar(lumine.grammars.nullGrammar);
       const grammarView = (await getGrammarView(editor)).element;
       expect(grammarView.querySelector("li.active").textContent).toBe("Auto Detect");
     }));
 
   describe("when editor is untitled", () =>
     it("sets the new grammar on the editor", async () => {
-      editor = await atom.workspace.open();
+      editor = await lumine.workspace.open();
       expect(editor.getGrammar()).not.toBe(jsGrammar);
 
       const grammarView = await getGrammarView(editor);
@@ -126,7 +128,7 @@ describe("GrammarSelector", () => {
 
       // Wait for status bar service hook to fire
       while (!grammarStatus || !grammarStatus.textContent) {
-        await atom.views.getNextUpdatePromise();
+        await lumine.views.getNextUpdatePromise();
         grammarStatus = document.querySelector(".grammar-status");
       }
     });
@@ -137,15 +139,15 @@ describe("GrammarSelector", () => {
     });
 
     it("displays Plain Text when the current grammar is the null grammar", async () => {
-      editor.setGrammar(atom.grammars.nullGrammar);
-      await atom.views.getNextUpdatePromise();
+      editor.setGrammar(lumine.grammars.nullGrammar);
+      await lumine.views.getNextUpdatePromise();
 
       expect(grammarStatus.querySelector("a").textContent).toBe("Plain Text");
       expect(grammarStatus).toBeVisible();
       expect(getTooltipText(grammarStatus)).toBe("File uses the Plain Text grammar");
 
-      editor.setGrammar(atom.grammars.grammarForScopeName("source.js"));
-      await atom.views.getNextUpdatePromise();
+      editor.setGrammar(lumine.grammars.grammarForScopeName("source.js"));
+      await lumine.views.getNextUpdatePromise();
 
       expect(grammarStatus.querySelector("a").textContent).toBe("JavaScript");
       expect(grammarStatus).toBeVisible();
@@ -154,8 +156,8 @@ describe("GrammarSelector", () => {
     it("hides the label when the current grammar is null", async () => {
       jasmine.attachToDOM(editor.getElement());
       spyOn(editor, "getGrammar").andReturn(null);
-      editor.setGrammar(atom.grammars.nullGrammar);
-      await atom.views.getNextUpdatePromise();
+      editor.setGrammar(lumine.grammars.nullGrammar);
+      await lumine.views.getNextUpdatePromise();
       expect(grammarStatus.offsetHeight).toBe(0);
     });
 
@@ -166,12 +168,12 @@ describe("GrammarSelector", () => {
           grammarStatus,
         );
 
-        atom.config.set("grammar-selector.showOnRightSideOfStatusBar", true);
+        lumine.config.set("grammar-selector.showOnRightSideOfStatusBar", true);
 
         expect(statusBar.getLeftTiles().map((tile) => tile.getItem())).not.toContain(grammarStatus);
         expect(statusBar.getRightTiles().map((tile) => tile.getItem())).toContain(grammarStatus);
 
-        atom.config.set("grammar-selector.showOnRightSideOfStatusBar", false);
+        lumine.config.set("grammar-selector.showOnRightSideOfStatusBar", false);
 
         expect(statusBar.getLeftTiles().map((tile) => tile.getItem())).toContain(grammarStatus);
         expect(statusBar.getRightTiles().map((tile) => tile.getItem())).not.toContain(
@@ -181,14 +183,14 @@ describe("GrammarSelector", () => {
 
     describe("when the editor's grammar changes", () =>
       it("displays the new grammar of the editor", async () => {
-        editor.setGrammar(atom.grammars.grammarForScopeName("text.plain"));
-        await atom.views.getNextUpdatePromise();
+        editor.setGrammar(lumine.grammars.grammarForScopeName("text.plain"));
+        await lumine.views.getNextUpdatePromise();
 
         expect(grammarStatus.querySelector("a").textContent).toBe("Plain Text");
         expect(getTooltipText(grammarStatus)).toBe("File uses the Plain Text grammar");
 
-        editor.setGrammar(atom.grammars.grammarForScopeName("source.a"));
-        await atom.views.getNextUpdatePromise();
+        editor.setGrammar(lumine.grammars.grammarForScopeName("source.a"));
+        await lumine.views.getNextUpdatePromise();
 
         expect(grammarStatus.querySelector("a").textContent).toBe("source.a");
         expect(getTooltipText(grammarStatus)).toBe("File uses the source.a grammar");
@@ -202,7 +204,7 @@ describe("GrammarSelector", () => {
 
       it("shows only the Tree-sitter if true and both exist", async () => {
         // the main JS grammar has both a TextMate and Tree-sitter implementation
-        atom.config.set("grammar-selector.hideDuplicateTextMateGrammars", true);
+        lumine.config.set("grammar-selector.hideDuplicateTextMateGrammars", true);
         const grammarView = await getGrammarView(editor);
         const observedNames = new Set();
         grammarView.element.querySelectorAll("li").forEach((li) => {
@@ -212,7 +214,7 @@ describe("GrammarSelector", () => {
         });
 
         // check the seen JS is actually the Tree-sitter one
-        const list = atom.workspace.getModalPanels()[0].item;
+        const list = lumine.workspace.getModalPanels()[0].item;
         for (const item of list.items) {
           if (item.name === "JavaScript") {
             expect(item.constructor.name === "TreeSitterGrammar");
@@ -221,13 +223,13 @@ describe("GrammarSelector", () => {
       });
 
       it("shows both if false (in proper order when language parser is web-tree-sitter)", async () => {
-        await atom.packages.activatePackage("language-c"); // punctuation making it sort wrong
+        await lumine.packages.activatePackage("language-c"); // punctuation making it sort wrong
         setConfigForLanguageMode("web-tree-sitter");
-        atom.config.set("grammar-selector.hideDuplicateTextMateGrammars", false);
+        lumine.config.set("grammar-selector.hideDuplicateTextMateGrammars", false);
         await getGrammarView(editor);
         let cppCount = 0;
 
-        const listItems = atom.workspace.getModalPanels()[0].item.items;
+        const listItems = lumine.workspace.getModalPanels()[0].item.items;
         for (let i = 0; i < listItems.length; i++) {
           const grammar = listItems[i];
           const name = grammar.name;
@@ -249,12 +251,12 @@ describe("GrammarSelector", () => {
       });
 
       it("shows both if false (in proper order when language parser is textmate)", async () => {
-        await atom.packages.activatePackage("language-c"); // punctuation making it sort wrong
-        atom.config.set("grammar-selector.hideDuplicateTextMateGrammars", false);
+        await lumine.packages.activatePackage("language-c"); // punctuation making it sort wrong
+        lumine.config.set("grammar-selector.hideDuplicateTextMateGrammars", false);
         await getGrammarView(editor);
         let cppCount = 0;
 
-        const listItems = atom.workspace.getModalPanels()[0].item.items;
+        const listItems = lumine.workspace.getModalPanels()[0].item.items;
         for (let i = 0; i < listItems.length; i++) {
           const grammar = listItems[i];
           const name = grammar.name;
@@ -279,7 +281,7 @@ describe("GrammarSelector", () => {
       it("adds a label to identify it as Tree-sitter", async () => {
         const grammarView = await getGrammarView(editor);
         const elements = grammarView.element.querySelectorAll("li");
-        const listItems = atom.workspace.getModalPanels()[0].item.items;
+        const listItems = lumine.workspace.getModalPanels()[0].item.items;
         for (let i = 0; i < listItems.length; i++) {
           if (listItems[i].constructor.name === "TreeSitterGrammar") {
             expect(
@@ -295,7 +297,7 @@ describe("GrammarSelector", () => {
     describe("when clicked", () =>
       it("shows the grammar selector modal", () => {
         const eventHandler = jasmine.createSpy("eventHandler");
-        atom.commands.add(editor.getElement(), "grammar-selector:show", eventHandler);
+        lumine.commands.add(editor.getElement(), "grammar-selector:show", eventHandler);
         grammarStatus.click();
         expect(eventHandler).toHaveBeenCalled();
       }));
@@ -303,16 +305,16 @@ describe("GrammarSelector", () => {
     describe("when the package is deactivated", () => {
       it("removes the view", () => {
         spyOn(grammarTile, "destroy");
-        atom.packages.deactivatePackage("grammar-selector");
+        lumine.packages.deactivatePackage("grammar-selector");
         expect(grammarTile.destroy).toHaveBeenCalled();
       });
 
       it("cancels a pending label update", async () => {
         const updateSubscription = jasmine.createSpyObj("update subscription", ["dispose"]);
-        spyOn(atom.views, "updateDocument").andReturn(updateSubscription);
+        spyOn(lumine.views, "updateDocument").andReturn(updateSubscription);
 
-        editor.setGrammar(atom.grammars.nullGrammar);
-        await atom.packages.deactivatePackage("grammar-selector");
+        editor.setGrammar(lumine.grammars.nullGrammar);
+        await lumine.packages.deactivatePackage("grammar-selector");
 
         expect(updateSubscription.dispose).toHaveBeenCalled();
       });
@@ -333,14 +335,14 @@ describe("GrammarSelector", () => {
         // -1 for removing nullGrammar, +1 for adding "Auto Detect"
         // Tree-sitter names the regex and JSDoc grammars
         expect(grammarView.querySelectorAll("li").length).toBe(
-          atom.grammars.getGrammars({ includeTreeSitter: true }).filter((g) => g.name).length,
+          lumine.grammars.getGrammars({ includeTreeSitter: true }).filter((g) => g.name).length,
         );
         expect(grammarView.querySelectorAll("li")[0].textContent).toBe("Auto Detect");
         expect(grammarView.textContent.includes("source.a")).toBe(false);
         grammarView
           .querySelectorAll("li")
-          .forEach((li) => expect(li.textContent).not.toBe(atom.grammars.nullGrammar.name));
-        if (!atom.config.get("grammar-selector.hideDuplicateTextMateGrammars")) {
+          .forEach((li) => expect(li.textContent).not.toBe(lumine.grammars.nullGrammar.name));
+        if (!lumine.config.get("grammar-selector.hideDuplicateTextMateGrammars")) {
           // Ensure we're showing and labelling tree-sitter grammars.
           expect(grammarView.textContent.includes("Tree-sitter")).toBe(true);
         }
@@ -349,7 +351,7 @@ describe("GrammarSelector", () => {
 
     describe("when toggling hideDuplicateTextMateGrammars", () => {
       it("shows only the preferred if true and several exist (and preferred is default)", async () => {
-        atom.config.set("grammar-selector.hideDuplicateTextMateGrammars", true);
+        lumine.config.set("grammar-selector.hideDuplicateTextMateGrammars", true);
         const grammarView = await getGrammarView(editor);
         const observedNames = new Map();
         // Show a maximum of one grammar (the tree-sitter variant).
@@ -366,7 +368,7 @@ describe("GrammarSelector", () => {
         });
 
         // check the seen JS is actually the Tree-sitter one
-        const list = atom.workspace.getModalPanels()[0].item;
+        const list = lumine.workspace.getModalPanels()[0].item;
         for (const item of list.items) {
           if (item.name === "JavaScript") {
             expect(item.constructor.name).toBe("TreeSitterGrammar");
@@ -375,7 +377,7 @@ describe("GrammarSelector", () => {
       });
 
       it("shows only the preferred if true and several exist (and preferred is web-tree-sitter)", async () => {
-        atom.config.set("grammar-selector.hideDuplicateTextMateGrammars", true);
+        lumine.config.set("grammar-selector.hideDuplicateTextMateGrammars", true);
         setConfigForLanguageMode("web-tree-sitter", { scopeSelector: ".source.js" });
         const grammarView = await getGrammarView(editor);
         const observedNames = new Map();
@@ -392,7 +394,7 @@ describe("GrammarSelector", () => {
         });
 
         // check the seen JS is actually the Tree-sitter one
-        const list = atom.workspace.getModalPanels()[0].item;
+        const list = lumine.workspace.getModalPanels()[0].item;
         for (const item of list.items) {
           if (item.name === "JavaScript") {
             expect(item.constructor.name).toBe("TreeSitterGrammar");
@@ -401,7 +403,7 @@ describe("GrammarSelector", () => {
       });
 
       it("shows only the preferred if true and several exist (and preferred is textmate)", async () => {
-        atom.config.set("grammar-selector.hideDuplicateTextMateGrammars", true);
+        lumine.config.set("grammar-selector.hideDuplicateTextMateGrammars", true);
         setConfigForLanguageMode("textmate", { scopeSelector: ".source.js" });
         const grammarView = await getGrammarView(editor);
         const observedNames = new Map();
@@ -418,7 +420,7 @@ describe("GrammarSelector", () => {
         });
 
         // check the seen JS is actually the Tree-sitter one
-        const list = atom.workspace.getModalPanels()[0].item;
+        const list = lumine.workspace.getModalPanels()[0].item;
         for (const item of list.items) {
           if (item.name === "JavaScript") {
             expect(item.constructor.name).toBe("Grammar");
@@ -427,12 +429,12 @@ describe("GrammarSelector", () => {
       });
 
       it("shows both if false (in the proper order when language parser is web-tree-sitter)", async () => {
-        await atom.packages.activatePackage("language-c"); // punctuation making it sort wrong
-        atom.config.set("grammar-selector.hideDuplicateTextMateGrammars", false);
+        await lumine.packages.activatePackage("language-c"); // punctuation making it sort wrong
+        lumine.config.set("grammar-selector.hideDuplicateTextMateGrammars", false);
         await getGrammarView(editor);
         let cppCount = 0;
 
-        const listItems = atom.workspace.getModalPanels()[0].item.items;
+        const listItems = lumine.workspace.getModalPanels()[0].item.items;
         for (let i = 0; i < listItems.length; i++) {
           const grammar = listItems[i];
           const name = grammar.name;
@@ -454,10 +456,10 @@ describe("GrammarSelector", () => {
 
     describe("for every Tree-sitter grammar", () => {
       it("adds a label to identify it as Tree-sitter", async () => {
-        atom.config.set("grammar-selector.hideDuplicateTextMateGrammars", false);
+        lumine.config.set("grammar-selector.hideDuplicateTextMateGrammars", false);
         const grammarView = await getGrammarView(editor);
         const elements = grammarView.element.querySelectorAll("li");
-        const listItems = atom.workspace.getModalPanels()[0].item.items;
+        const listItems = lumine.workspace.getModalPanels()[0].item.items;
         for (let i = 0; i < listItems.length; i++) {
           let item = listItems[i];
           let element = elements[i];
@@ -492,13 +494,13 @@ describe("GrammarSelector", () => {
         // -1 for removing nullGrammar, +1 for adding "Auto Detect"
         // Tree-sitter names the regex and JSDoc grammars
         expect(grammarView.querySelectorAll("li").length).toBe(
-          atom.grammars.getGrammars({ includeTreeSitter: true }).filter((g) => g.name).length,
+          lumine.grammars.getGrammars({ includeTreeSitter: true }).filter((g) => g.name).length,
         );
         expect(grammarView.querySelectorAll("li")[0].textContent).toBe("Auto Detect");
         expect(grammarView.textContent.includes("source.a")).toBe(false);
         grammarView
           .querySelectorAll("li")
-          .forEach((li) => expect(li.textContent).not.toBe(atom.grammars.nullGrammar.name));
+          .forEach((li) => expect(li.textContent).not.toBe(lumine.grammars.nullGrammar.name));
         // Ensure we're showing and labelling Tree-sitter grammars.
         expect(grammarView.textContent.includes("Tree-sitter")).toBe(true);
       });
@@ -507,7 +509,7 @@ describe("GrammarSelector", () => {
     describe("when toggling hideDuplicateTextMateGrammars", () => {
       it("shows only the Tree-sitter if true and several exist", async () => {
         // the main JS grammar has both a TextMate and Tree-sitter implementation
-        atom.config.set("grammar-selector.hideDuplicateTextMateGrammars", true);
+        lumine.config.set("grammar-selector.hideDuplicateTextMateGrammars", true);
         const grammarView = await getGrammarView(editor);
         const observedNames = new Map();
 
@@ -524,7 +526,7 @@ describe("GrammarSelector", () => {
         });
 
         // check the seen JS is actually the Tree-sitter one
-        const list = atom.workspace.getModalPanels()[0].item;
+        const list = lumine.workspace.getModalPanels()[0].item;
         for (const item of list.items) {
           if (item.name === "JavaScript") {
             expect(item.constructor.name).toBe("TreeSitterGrammar");
@@ -533,12 +535,12 @@ describe("GrammarSelector", () => {
       });
 
       it("shows both if false", async () => {
-        await atom.packages.activatePackage("language-c");
-        atom.config.set("grammar-selector.hideDuplicateTextMateGrammars", false);
+        await lumine.packages.activatePackage("language-c");
+        lumine.config.set("grammar-selector.hideDuplicateTextMateGrammars", false);
         await getGrammarView(editor);
         let cppCount = 0;
 
-        const listItems = atom.workspace.getModalPanels()[0].item.items;
+        const listItems = lumine.workspace.getModalPanels()[0].item.items;
         for (let i = 0; i < listItems.length; i++) {
           const grammar = listItems[i];
           const name = grammar.name;
@@ -560,10 +562,10 @@ describe("GrammarSelector", () => {
 
     describe("for every Tree-sitter grammar", () => {
       it("adds a label to identify it as Tree-sitter (when showing duplicate grammars)", async () => {
-        atom.config.set("grammar-selector.hideDuplicateTextMateGrammars", false);
+        lumine.config.set("grammar-selector.hideDuplicateTextMateGrammars", false);
         const grammarView = await getGrammarView(editor);
         const elements = grammarView.element.querySelectorAll("li");
-        const listItems = atom.workspace.getModalPanels()[0].item.items;
+        const listItems = lumine.workspace.getModalPanels()[0].item.items;
         for (let i = 0; i < listItems.length; i++) {
           let item = listItems[i];
           let element = elements[i];
@@ -583,10 +585,10 @@ describe("GrammarSelector", () => {
       });
 
       it("does not add a label to identify it as Tree-sitter (when hiding duplicate grammars)", async () => {
-        atom.config.set("grammar-selector.hideDuplicateTextMateGrammars", true);
+        lumine.config.set("grammar-selector.hideDuplicateTextMateGrammars", true);
         const grammarView = await getGrammarView(editor);
         const elements = grammarView.element.querySelectorAll("li");
-        const listItems = atom.workspace.getModalPanels()[0].item.items;
+        const listItems = lumine.workspace.getModalPanels()[0].item.items;
         for (let i = 0; i < listItems.length; i++) {
           let item = listItems[i];
           let element = elements[i];
@@ -607,7 +609,7 @@ describe("GrammarSelector", () => {
 });
 
 function getTooltipText(element) {
-  const [tooltip] = atom.tooltips.findTooltips(element);
+  const [tooltip] = lumine.tooltips.findTooltips(element);
   return tooltip.getTitle();
 }
 
@@ -615,8 +617,8 @@ async function getGrammarView(editor) {
   let timeout = setTimeout(() => {
     throw new Error("Timeout");
   }, 5000);
-  atom.commands.dispatch(editor.getElement(), "grammar-selector:show");
-  await atom.views.getNextUpdatePromise();
+  lumine.commands.dispatch(editor.getElement(), "grammar-selector:show");
+  await lumine.views.getNextUpdatePromise();
   clearTimeout(timeout);
-  return atom.workspace.getModalPanels()[0].getItem();
+  return lumine.workspace.getModalPanels()[0].getItem();
 }
