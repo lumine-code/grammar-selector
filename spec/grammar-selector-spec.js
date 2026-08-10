@@ -155,7 +155,7 @@ describe("GrammarSelector", () => {
 
     it("hides the label when the current grammar is null", async () => {
       jasmine.attachToDOM(editor.getElement());
-      spyOn(editor, "getGrammar").andReturn(null);
+      spyOn(editor, "getGrammar").and.returnValue(null);
       editor.setGrammar(lumine.grammars.nullGrammar);
       await lumine.views.getNextUpdatePromise();
       expect(grammarStatus.offsetHeight).toBe(0);
@@ -311,7 +311,7 @@ describe("GrammarSelector", () => {
 
       it("cancels a pending label update", async () => {
         const updateSubscription = jasmine.createSpyObj("update subscription", ["dispose"]);
-        spyOn(lumine.views, "updateDocument").andReturn(updateSubscription);
+        spyOn(lumine.views, "updateDocument").and.returnValue(updateSubscription);
 
         editor.setGrammar(lumine.grammars.nullGrammar);
         await lumine.packages.deactivatePackage("grammar-selector");
