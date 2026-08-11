@@ -134,7 +134,7 @@ describe("GrammarSelector", () => {
     });
 
     it("displays the name of the current grammar", () => {
-      expect(grammarStatus.querySelector("a").textContent).toBe("JavaScript");
+      expect(grammarStatus.textContent).toBe("JavaScript");
       expect(getTooltipText(grammarStatus)).toBe("File uses the JavaScript grammar");
     });
 
@@ -142,14 +142,14 @@ describe("GrammarSelector", () => {
       editor.setGrammar(lumine.grammars.nullGrammar);
       await lumine.views.getNextUpdatePromise();
 
-      expect(grammarStatus.querySelector("a").textContent).toBe("Plain Text");
+      expect(grammarStatus.textContent).toBe("Plain Text");
       expect(grammarStatus).toBeVisible();
       expect(getTooltipText(grammarStatus)).toBe("File uses the Plain Text grammar");
 
       editor.setGrammar(lumine.grammars.grammarForScopeName("source.js"));
       await lumine.views.getNextUpdatePromise();
 
-      expect(grammarStatus.querySelector("a").textContent).toBe("JavaScript");
+      expect(grammarStatus.textContent).toBe("JavaScript");
       expect(grammarStatus).toBeVisible();
     });
 
@@ -186,13 +186,13 @@ describe("GrammarSelector", () => {
         editor.setGrammar(lumine.grammars.grammarForScopeName("text.plain"));
         await lumine.views.getNextUpdatePromise();
 
-        expect(grammarStatus.querySelector("a").textContent).toBe("Plain Text");
+        expect(grammarStatus.textContent).toBe("Plain Text");
         expect(getTooltipText(grammarStatus)).toBe("File uses the Plain Text grammar");
 
         editor.setGrammar(lumine.grammars.grammarForScopeName("source.a"));
         await lumine.views.getNextUpdatePromise();
 
-        expect(grammarStatus.querySelector("a").textContent).toBe("source.a");
+        expect(grammarStatus.textContent).toBe("source.a");
         expect(getTooltipText(grammarStatus)).toBe("File uses the source.a grammar");
       }));
 
