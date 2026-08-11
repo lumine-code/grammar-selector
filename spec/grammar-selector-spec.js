@@ -136,6 +136,7 @@ describe("GrammarSelector", () => {
     it("displays the name of the current grammar", () => {
       expect(grammarStatus.textContent).toBe("JavaScript");
       expect(getTooltipText(grammarStatus)).toBe("File uses the JavaScript grammar");
+      expect(getTooltipKeyBinding(grammarStatus)).toBe("Ctrl+Shift+L");
     });
 
     it("displays Plain Text when the current grammar is the null grammar", async () => {
@@ -609,8 +610,20 @@ describe("GrammarSelector", () => {
 });
 
 function getTooltipText(element) {
+  const tooltipElement = getTooltipElement(element);
+  tooltipElement.querySelector(".key-bindings")?.remove();
+  return tooltipElement.textContent.trim();
+}
+
+function getTooltipKeyBinding(element) {
+  return getTooltipElement(element).querySelector(".keystroke")?.textContent;
+}
+
+function getTooltipElement(element) {
   const [tooltip] = lumine.tooltips.findTooltips(element);
-  return tooltip.getTitle();
+  const tooltipElement = document.createElement("div");
+  tooltipElement.innerHTML = tooltip.getTitle();
+  return tooltipElement;
 }
 
 async function getGrammarView(editor) {
