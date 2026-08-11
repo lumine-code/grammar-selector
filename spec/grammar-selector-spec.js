@@ -136,7 +136,9 @@ describe("GrammarSelector", () => {
     it("displays the name of the current grammar", () => {
       expect(grammarStatus.textContent).toBe("JavaScript");
       expect(getTooltipText(grammarStatus)).toBe("File uses the JavaScript grammar");
-      expect(getTooltipKeyBinding(grammarStatus)).toBe("Ctrl+Shift+L");
+      expect(getTooltipKeyBinding(grammarStatus)).toBe(
+        process.platform === "darwin" ? "⌃⇧L" : "Ctrl+Shift+L",
+      );
     });
 
     it("displays Plain Text when the current grammar is the null grammar", async () => {
