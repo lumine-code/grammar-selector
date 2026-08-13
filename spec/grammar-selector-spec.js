@@ -158,10 +158,34 @@ describe("GrammarSelector", () => {
 
     it("displays the name of the current grammar", () => {
       expect(grammarStatus.textContent).toBe("JavaScript");
-      expect(getTooltipText(grammarStatus)).toBe("File uses the JavaScript grammar");
+      expect(getTooltipText(grammarStatus)).toBe("Uses the JavaScript grammar");
       expect(getTooltipKeyBinding(grammarStatus)).toBe(
         process.platform === "darwin" ? "⌃⇧L" : "Ctrl+Shift+L",
       );
+    });
+
+    it("displays the embedded editor's grammar for an item that reports one", async () => {
+      // The shape a notebook has: not a text editor itself, but naming the
+      // active cell's editor through the workspace's item protocol.
+      const embedded = lumine.workspace.buildTextEditor({ autoHeight: true });
+      embedded.setGrammar(textGrammar);
+      const item = document.createElement("div");
+      item.getTitle = () => "Embedded Host";
+      item.getActiveEmbeddedTextEditor = () => embedded;
+      item.onDidChangeActiveTextEditors = () => ({ dispose() {} });
+
+      try {
+        lumine.workspace.getCenter().getActivePane().activateItem(item);
+        await lumine.views.getNextUpdatePromise();
+
+        expect(lumine.workspace.getActiveTextEditor()).toBeUndefined();
+        expect(grammarStatus.textContent).toBe("Plain Text");
+        expect(grammarStatus.style.display).toBe("");
+      } finally {
+        lumine.workspace.getCenter().getActivePane().activateItem(editor);
+        await lumine.views.getNextUpdatePromise();
+        embedded.destroy();
+      }
     });
 
     it("displays Plain Text when the current grammar is the null grammar", async () => {
@@ -170,7 +194,7 @@ describe("GrammarSelector", () => {
 
       expect(grammarStatus.textContent).toBe("Plain Text");
       expect(grammarStatus).toBeVisible();
-      expect(getTooltipText(grammarStatus)).toBe("File uses the Plain Text grammar");
+      expect(getTooltipText(grammarStatus)).toBe("Uses the Plain Text grammar");
 
       editor.setGrammar(lumine.grammars.grammarForScopeName("source.js"));
       await lumine.views.getNextUpdatePromise();
@@ -213,13 +237,13 @@ describe("GrammarSelector", () => {
         await lumine.views.getNextUpdatePromise();
 
         expect(grammarStatus.textContent).toBe("Plain Text");
-        expect(getTooltipText(grammarStatus)).toBe("File uses the Plain Text grammar");
+        expect(getTooltipText(grammarStatus)).toBe("Uses the Plain Text grammar");
 
         editor.setGrammar(lumine.grammars.grammarForScopeName("source.a"));
         await lumine.views.getNextUpdatePromise();
 
         expect(grammarStatus.textContent).toBe("source.a");
-        expect(getTooltipText(grammarStatus)).toBe("File uses the source.a grammar");
+        expect(getTooltipText(grammarStatus)).toBe("Uses the source.a grammar");
       }));
 
     describe("when toggling hideDuplicateTextMateGrammars", () => {
