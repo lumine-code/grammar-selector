@@ -116,6 +116,29 @@ describe("GrammarSelector", () => {
       expect(editor.getGrammar()).toBe(jsGrammar);
     }));
 
+  describe("when dispatched from an embedded editor that is not the active pane item", () =>
+    it("targets the editor hosting the dispatch, not the active pane item", async () => {
+      // A notebook cell's editor is a real `lumine-text-editor` living inside
+      // another pane item, so the active text editor is never the one asked.
+      const embedded = lumine.workspace.buildTextEditor({ autoHeight: true });
+      const element = embedded.getElement();
+      lumine.views.getView(lumine.workspace).appendChild(element);
+
+      try {
+        expect(lumine.workspace.getActiveTextEditor()).toBe(editor);
+        const activeGrammarBefore = editor.getGrammar();
+
+        const grammarView = await getGrammarView(embedded);
+        grammarView.props.didConfirmSelection(textGrammar);
+
+        expect(embedded.getGrammar()).toBe(textGrammar);
+        expect(editor.getGrammar()).toBe(activeGrammarBefore);
+      } finally {
+        element.remove();
+        embedded.destroy();
+      }
+    }));
+
   describe("Status bar grammar label", () => {
     let [grammarStatus, grammarTile, statusBar] = [];
 
