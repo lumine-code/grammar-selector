@@ -11,7 +11,7 @@ Pick the grammar used for syntax highlighting in the current editor.
 
 ## Installation
 
-To install `grammar-selector` search for _grammar-selector_ in the Install pane of the Lumine settings or run `lumine --install lumine-code/grammar-selector`.
+To install `grammar-selector` search for it in the Install pane of the Lumine settings, or run the command `lumine --install lumine-code/grammar-selector`.
 
 ## Commands
 
@@ -21,7 +21,7 @@ Commands available in `lumine-workspace`:
 
 ## Services
 
-- **status-bar** (`^1.0.0`): consumed to show the active grammar in the status bar.
+- `status-bar`: consumed to show the active grammar in the status bar.
 
 ## Contributing
 
