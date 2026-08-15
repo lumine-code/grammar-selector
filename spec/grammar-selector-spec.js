@@ -42,11 +42,15 @@ describe("GrammarSelector", () => {
 
       // -1 for removing nullGrammar, +1 for adding "Auto Detect"
       // Tree-sitter names the regex and JSDoc grammars
-      expect(grammarView.querySelectorAll("li").length).toBe(allGrammars.length);
-      expect(grammarView.querySelectorAll("li")[0].textContent).toBe("Auto Detect");
+      expect(grammarView.querySelectorAll("li:not(.select-list-separator)").length).toBe(
+        allGrammars.length,
+      );
+      expect(grammarView.querySelectorAll("li:not(.select-list-separator)")[0].textContent).toBe(
+        "Auto Detect",
+      );
       expect(grammarView.textContent.includes("source.a")).toBe(false);
       grammarView
-        .querySelectorAll("li")
+        .querySelectorAll("li:not(.select-list-separator)")
         .forEach((li) => expect(li.textContent).not.toBe(lumine.grammars.nullGrammar.name));
       if (!lumine.config.get("grammar-selector.hideDuplicateTextMateGrammars")) {
         expect(grammarView.textContent.includes("Tree-sitter")).toBe(true); // check we are showing and labelling Tree-sitter grammars
@@ -99,12 +103,43 @@ describe("GrammarSelector", () => {
     });
   });
 
-  describe("when the editor's current grammar is the null grammar", () =>
+  describe("when the editor's current grammar is the null grammar", () => {
     it("displays Auto Detect as the selected grammar", async () => {
       editor.setGrammar(lumine.grammars.nullGrammar);
       const grammarView = (await getGrammarView(editor)).element;
       expect(grammarView.querySelector("li.active").textContent).toBe("Auto Detect");
-    }));
+    });
+
+    it("rules off directly under Auto Detect, with nothing to hoist above it", async () => {
+      editor.setGrammar(lumine.grammars.nullGrammar);
+      const grammarView = (await getGrammarView(editor)).element;
+
+      const separator = grammarView.querySelector(".select-list-separator");
+      expect(separator.previousElementSibling.textContent).toBe("Auto Detect");
+    });
+  });
+
+  describe("the current grammar's place in the list", () => {
+    it("sits directly under Auto Detect, with a rule below it", async () => {
+      const view = await getGrammarView(editor);
+
+      expect(view.items[0]).toBe(view.props.items[0]);
+      expect(view.items[0].name).toBe("Auto Detect");
+      expect(view.items[1]).toBe(editor.getGrammar());
+
+      const separator = view.element.querySelector(".select-list-separator");
+      expect(separator.previousElementSibling.dataset.grammar).toBe(editor.getGrammar().name);
+      expect(separator.previousElementSibling.classList.contains("active")).toBe(true);
+    });
+
+    it("drops the rule once a query ranks the rows instead", async () => {
+      const view = await getGrammarView(editor);
+      view.refs.queryEditor.setText("jav");
+      await lumine.views.getNextUpdatePromise();
+
+      expect(view.element.querySelector(".select-list-separator")).toBeNull();
+    });
+  });
 
   describe("when editor is untitled", () =>
     it("sets the new grammar on the editor", async () => {
@@ -257,7 +292,7 @@ describe("GrammarSelector", () => {
         lumine.config.set("grammar-selector.hideDuplicateTextMateGrammars", true);
         const grammarView = await getGrammarView(editor);
         const observedNames = new Set();
-        grammarView.element.querySelectorAll("li").forEach((li) => {
+        grammarView.element.querySelectorAll("li:not(.select-list-separator)").forEach((li) => {
           const name = li.getAttribute("data-grammar");
           expect(observedNames.has(name)).toBe(false);
           observedNames.add(name);
@@ -330,7 +365,7 @@ describe("GrammarSelector", () => {
     describe("for every Tree-sitter grammar", () => {
       it("adds a label to identify it as Tree-sitter", async () => {
         const grammarView = await getGrammarView(editor);
-        const elements = grammarView.element.querySelectorAll("li");
+        const elements = grammarView.element.querySelectorAll("li:not(.select-list-separator)");
         const listItems = lumine.workspace.getModalPanels()[0].item.items;
         for (let i = 0; i < listItems.length; i++) {
           if (listItems[i].constructor.name === "TreeSitterGrammar") {
@@ -384,13 +419,15 @@ describe("GrammarSelector", () => {
 
         // -1 for removing nullGrammar, +1 for adding "Auto Detect"
         // Tree-sitter names the regex and JSDoc grammars
-        expect(grammarView.querySelectorAll("li").length).toBe(
+        expect(grammarView.querySelectorAll("li:not(.select-list-separator)").length).toBe(
           lumine.grammars.getGrammars({ includeTreeSitter: true }).filter((g) => g.name).length,
         );
-        expect(grammarView.querySelectorAll("li")[0].textContent).toBe("Auto Detect");
+        expect(grammarView.querySelectorAll("li:not(.select-list-separator)")[0].textContent).toBe(
+          "Auto Detect",
+        );
         expect(grammarView.textContent.includes("source.a")).toBe(false);
         grammarView
-          .querySelectorAll("li")
+          .querySelectorAll("li:not(.select-list-separator)")
           .forEach((li) => expect(li.textContent).not.toBe(lumine.grammars.nullGrammar.name));
         if (!lumine.config.get("grammar-selector.hideDuplicateTextMateGrammars")) {
           // Ensure we're showing and labelling tree-sitter grammars.
@@ -405,7 +442,7 @@ describe("GrammarSelector", () => {
         const grammarView = await getGrammarView(editor);
         const observedNames = new Map();
         // Show a maximum of one grammar (the tree-sitter variant).
-        grammarView.element.querySelectorAll("li").forEach((li) => {
+        grammarView.element.querySelectorAll("li:not(.select-list-separator)").forEach((li) => {
           const name = li.getAttribute("data-grammar");
           if (!observedNames.has(name)) {
             observedNames.set(name, 0);
@@ -431,7 +468,7 @@ describe("GrammarSelector", () => {
         setConfigForLanguageMode("web-tree-sitter", { scopeSelector: ".source.js" });
         const grammarView = await getGrammarView(editor);
         const observedNames = new Map();
-        grammarView.element.querySelectorAll("li").forEach((li) => {
+        grammarView.element.querySelectorAll("li:not(.select-list-separator)").forEach((li) => {
           const name = li.getAttribute("data-grammar");
           if (!observedNames.has(name)) {
             observedNames.set(name, 0);
@@ -457,7 +494,7 @@ describe("GrammarSelector", () => {
         setConfigForLanguageMode("textmate", { scopeSelector: ".source.js" });
         const grammarView = await getGrammarView(editor);
         const observedNames = new Map();
-        grammarView.element.querySelectorAll("li").forEach((li) => {
+        grammarView.element.querySelectorAll("li:not(.select-list-separator)").forEach((li) => {
           const name = li.getAttribute("data-grammar");
           if (!observedNames.has(name)) {
             observedNames.set(name, 0);
@@ -508,7 +545,7 @@ describe("GrammarSelector", () => {
       it("adds a label to identify it as Tree-sitter", async () => {
         lumine.config.set("grammar-selector.hideDuplicateTextMateGrammars", false);
         const grammarView = await getGrammarView(editor);
-        const elements = grammarView.element.querySelectorAll("li");
+        const elements = grammarView.element.querySelectorAll("li:not(.select-list-separator)");
         const listItems = lumine.workspace.getModalPanels()[0].item.items;
         for (let i = 0; i < listItems.length; i++) {
           let item = listItems[i];
@@ -543,13 +580,15 @@ describe("GrammarSelector", () => {
 
         // -1 for removing nullGrammar, +1 for adding "Auto Detect"
         // Tree-sitter names the regex and JSDoc grammars
-        expect(grammarView.querySelectorAll("li").length).toBe(
+        expect(grammarView.querySelectorAll("li:not(.select-list-separator)").length).toBe(
           lumine.grammars.getGrammars({ includeTreeSitter: true }).filter((g) => g.name).length,
         );
-        expect(grammarView.querySelectorAll("li")[0].textContent).toBe("Auto Detect");
+        expect(grammarView.querySelectorAll("li:not(.select-list-separator)")[0].textContent).toBe(
+          "Auto Detect",
+        );
         expect(grammarView.textContent.includes("source.a")).toBe(false);
         grammarView
-          .querySelectorAll("li")
+          .querySelectorAll("li:not(.select-list-separator)")
           .forEach((li) => expect(li.textContent).not.toBe(lumine.grammars.nullGrammar.name));
         // Ensure we're showing and labelling Tree-sitter grammars.
         expect(grammarView.textContent.includes("Tree-sitter")).toBe(true);
@@ -563,7 +602,7 @@ describe("GrammarSelector", () => {
         const grammarView = await getGrammarView(editor);
         const observedNames = new Map();
 
-        grammarView.element.querySelectorAll("li").forEach((li) => {
+        grammarView.element.querySelectorAll("li:not(.select-list-separator)").forEach((li) => {
           const name = li.getAttribute("data-grammar");
           if (!observedNames.has(name)) {
             observedNames.set(name, 0);
@@ -614,7 +653,7 @@ describe("GrammarSelector", () => {
       it("adds a label to identify it as Tree-sitter (when showing duplicate grammars)", async () => {
         lumine.config.set("grammar-selector.hideDuplicateTextMateGrammars", false);
         const grammarView = await getGrammarView(editor);
-        const elements = grammarView.element.querySelectorAll("li");
+        const elements = grammarView.element.querySelectorAll("li:not(.select-list-separator)");
         const listItems = lumine.workspace.getModalPanels()[0].item.items;
         for (let i = 0; i < listItems.length; i++) {
           let item = listItems[i];
@@ -637,7 +676,7 @@ describe("GrammarSelector", () => {
       it("does not add a label to identify it as Tree-sitter (when hiding duplicate grammars)", async () => {
         lumine.config.set("grammar-selector.hideDuplicateTextMateGrammars", true);
         const grammarView = await getGrammarView(editor);
-        const elements = grammarView.element.querySelectorAll("li");
+        const elements = grammarView.element.querySelectorAll("li:not(.select-list-separator)");
         const listItems = lumine.workspace.getModalPanels()[0].item.items;
         for (let i = 0; i < listItems.length; i++) {
           let item = listItems[i];

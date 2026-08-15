@@ -5,6 +5,7 @@ Pick the grammar used for syntax highlighting in the current editor.
 ## Features
 
 - **Grammar picker**: choose the grammar for the active editor from a searchable list.
+- **Current grammar first**: the editor's own grammar sits under Auto Detect, ruled off from the rest.
 - **Status bar tile**: shows the active grammar and opens the picker when clicked.
 - **Duplicate handling**: optionally hides non-preferred grammars when several match a scope.
 - **Configurable placement**: shows the grammar tile on the left or right of the status bar.
