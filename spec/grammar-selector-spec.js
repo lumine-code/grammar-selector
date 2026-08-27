@@ -2,7 +2,7 @@ const path = require("path");
 
 function setConfigForLanguageMode(mode) {
   let useTreeSitterParsers = mode !== "textmate";
-  lumine.config.set("language.useTreeSitterParsers", useTreeSitterParsers);
+  lumine.config.set("editor.useTreeSitterParsers", useTreeSitterParsers);
 }
 
 describe("GrammarSelector", () => {
