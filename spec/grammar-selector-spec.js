@@ -156,6 +156,7 @@ describe("GrammarSelector", () => {
       // A notebook cell's editor is a real `lumine-text-editor` living inside
       // another pane item, so the active text editor is never the one asked.
       const embedded = lumine.workspace.buildTextEditor({ autoHeight: true });
+      const registration = lumine.textEditors.add(embedded);
       const element = embedded.getElement();
       lumine.views.getView(lumine.workspace).appendChild(element);
 
@@ -169,6 +170,7 @@ describe("GrammarSelector", () => {
         expect(embedded.getGrammar()).toBe(textGrammar);
         expect(editor.getGrammar()).toBe(activeGrammarBefore);
       } finally {
+        registration.dispose();
         element.remove();
         embedded.destroy();
       }
