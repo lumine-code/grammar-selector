@@ -1,25 +1,16 @@
 const path = require("path");
 
-function setConfigForLanguageMode(mode) {
-  let useTreeSitterParsers = mode !== "textmate";
-  lumine.config.set("editor.useTreeSitterParsers", useTreeSitterParsers);
-}
-
 describe("GrammarSelector", () => {
   let [editor, textGrammar, jsGrammar] = [];
 
   beforeEach(async () => {
     jasmine.attachToDOM(lumine.views.getView(lumine.workspace));
     lumine.config.set("grammar-selector.showOnRightSideOfStatusBar", false);
-    lumine.config.set("grammar-selector.hideDuplicateTextMateGrammars", false);
 
     await lumine.packages.activatePackage("status-bar");
     await lumine.packages.activatePackage("grammar-selector");
     await lumine.packages.activatePackage("language-text");
     await lumine.packages.activatePackage("language-javascript");
-    await lumine.packages.activatePackage(
-      path.join(__dirname, "fixtures", "language-with-no-name"),
-    );
 
     editor = await lumine.workspace.open(path.join(__dirname, "fixtures", "sample.js"));
 
@@ -28,33 +19,30 @@ describe("GrammarSelector", () => {
     jsGrammar = lumine.grammars.grammarForScopeName("source.js");
     expect(jsGrammar).toBeTruthy();
     expect(editor.getGrammar()).toBe(jsGrammar);
-
-    setConfigForLanguageMode("textmate");
   });
 
   describe("when grammar-selector:show is triggered", () =>
     it("displays a list of all the available grammars", async () => {
+      const grammars = lumine.grammars.getGrammars();
+      spyOn(lumine.grammars, "getGrammars").and.returnValue([
+        ...grammars,
+        { scopeName: "source.unnamed-injection", type: "tree-sitter" },
+      ]);
       const grammarView = (await getGrammarView(editor)).element;
 
-      let allGrammars = lumine.grammars
-        .getGrammars({ includeTreeSitter: true })
-        .filter((g) => g.name);
+      let allGrammars = lumine.grammars.getGrammars().filter((g) => g.name);
 
       // -1 for removing nullGrammar, +1 for adding "Auto Detect"
-      // Tree-sitter names the regex and JSDoc grammars
       expect(grammarView.querySelectorAll("li:not(.select-list-separator)").length).toBe(
         allGrammars.length,
       );
       expect(grammarView.querySelectorAll("li:not(.select-list-separator)")[0].textContent).toBe(
         "Auto Detect",
       );
-      expect(grammarView.textContent.includes("source.a")).toBe(false);
+      expect(grammarView.textContent).not.toContain("source.unnamed-injection");
       grammarView
         .querySelectorAll("li:not(.select-list-separator)")
         .forEach((li) => expect(li.textContent).not.toBe(lumine.grammars.nullGrammar.name));
-      if (!lumine.config.get("grammar-selector.hideDuplicateTextMateGrammars")) {
-        expect(grammarView.textContent.includes("Tree-sitter")).toBe(true); // check we are showing and labelling Tree-sitter grammars
-      }
     }));
 
   describe("when the query matches a grammar", () =>
@@ -79,19 +67,7 @@ describe("GrammarSelector", () => {
     }));
 
   describe("when auto-detect is selected", () => {
-    it("restores the auto-detected grammar on the editor (when language parser is textmate)", async () => {
-      let grammarView = await getGrammarView(editor);
-      grammarView.props.didConfirmSelection(textGrammar);
-      expect(editor.getGrammar()).toBe(textGrammar);
-      grammarView = await getGrammarView(editor);
-      grammarView.props.didConfirmSelection(grammarView.items[0]);
-      let currentGrammar = editor.getGrammar();
-      expect(currentGrammar.scopeName).toBe("source.js");
-      expect(currentGrammar.constructor.name).toBe("Grammar");
-    });
-
-    it("restores the auto-detected grammar on the editor (when language parser is web-tree-sitter)", async () => {
-      setConfigForLanguageMode("web-tree-sitter");
+    it("restores the auto-detected grammar on the editor", async () => {
       let grammarView = await getGrammarView(editor);
       grammarView.props.didConfirmSelection(textGrammar);
       expect(editor.getGrammar()).toBe(textGrammar);
@@ -275,111 +251,7 @@ describe("GrammarSelector", () => {
 
         expect(grammarStatus.textContent).toBe("Plain Text");
         expect(getTooltipText(grammarStatus)).toBe("Uses the Plain Text grammar");
-
-        editor.setGrammar(lumine.grammars.grammarForScopeName("source.a"));
-        await lumine.views.getNextUpdatePromise();
-
-        expect(grammarStatus.textContent).toBe("source.a");
-        expect(getTooltipText(grammarStatus)).toBe("Uses the source.a grammar");
       }));
-
-    describe("when toggling hideDuplicateTextMateGrammars", () => {
-      // For continuity reasons, the name of the setting won't be changed; but
-      // this should now be construed as “hide duplicate grammars” — with the
-      // grammar selector showing whatever the user-indicated preference is for
-      // a given grammar.
-
-      it("shows only the Tree-sitter if true and both exist", async () => {
-        // the main JS grammar has both a TextMate and Tree-sitter implementation
-        lumine.config.set("grammar-selector.hideDuplicateTextMateGrammars", true);
-        const grammarView = await getGrammarView(editor);
-        const observedNames = new Set();
-        grammarView.element.querySelectorAll("li:not(.select-list-separator)").forEach((li) => {
-          const name = li.getAttribute("data-grammar");
-          expect(observedNames.has(name)).toBe(false);
-          observedNames.add(name);
-        });
-
-        // check the seen JS is actually the Tree-sitter one
-        const list = lumine.workspace.getModalPanels()[0].item;
-        for (const item of list.items) {
-          if (item.name === "JavaScript") {
-            expect(item.constructor.name === "TreeSitterGrammar");
-          }
-        }
-      });
-
-      it("shows both if false (in proper order when language parser is web-tree-sitter)", async () => {
-        await lumine.packages.activatePackage("language-c"); // punctuation making it sort wrong
-        setConfigForLanguageMode("web-tree-sitter");
-        lumine.config.set("grammar-selector.hideDuplicateTextMateGrammars", false);
-        await getGrammarView(editor);
-        let cppCount = 0;
-
-        const listItems = lumine.workspace.getModalPanels()[0].item.items;
-        for (let i = 0; i < listItems.length; i++) {
-          const grammar = listItems[i];
-          const name = grammar.name;
-          if (cppCount === 0 && name === "C++") {
-            // First C++ entry should be Tree-sitter.
-            expect(grammar.constructor.name).toBe("TreeSitterGrammar");
-            cppCount++;
-          } else if (cppCount === 1) {
-            // immediate next grammar should be the TextMate version
-            expect(name).toBe("C++");
-            expect(grammar.constructor.name).toBe("Grammar");
-            cppCount++;
-          } else {
-            expect(name).not.toBe("C++"); // there should not be any other C++ grammars
-          }
-        }
-
-        expect(cppCount).toBe(2); // ensure we actually saw two grammars
-      });
-
-      it("shows both if false (in proper order when language parser is textmate)", async () => {
-        await lumine.packages.activatePackage("language-c"); // punctuation making it sort wrong
-        lumine.config.set("grammar-selector.hideDuplicateTextMateGrammars", false);
-        await getGrammarView(editor);
-        let cppCount = 0;
-
-        const listItems = lumine.workspace.getModalPanels()[0].item.items;
-        for (let i = 0; i < listItems.length; i++) {
-          const grammar = listItems[i];
-          const name = grammar.name;
-          if (cppCount === 0 && name === "C++") {
-            // first C++ entry should be TextMate
-            expect(grammar.constructor.name).toBe("Grammar");
-            cppCount++;
-          } else if (cppCount === 1) {
-            // next C++ entry should be Tree-sitter
-            expect(grammar.constructor.name).toBe("TreeSitterGrammar");
-            cppCount++;
-          } else {
-            expect(name).not.toBe("C++"); // there should not be any other C++ grammars
-          }
-        }
-
-        expect(cppCount).toBe(2); // ensure we actually saw two grammars
-      });
-    });
-
-    describe("for every Tree-sitter grammar", () => {
-      it("adds a label to identify it as Tree-sitter", async () => {
-        const grammarView = await getGrammarView(editor);
-        const elements = grammarView.element.querySelectorAll("li:not(.select-list-separator)");
-        const listItems = lumine.workspace.getModalPanels()[0].item.items;
-        for (let i = 0; i < listItems.length; i++) {
-          if (listItems[i].constructor.name === "TreeSitterGrammar") {
-            expect(
-              elements[i].childNodes[1].childNodes[0].className.startsWith(
-                "grammar-selector-parser",
-              ),
-            ).toBe(true);
-          }
-        }
-      });
-    });
 
     describe("when clicked", () =>
       it("shows the grammar selector modal", () => {
@@ -404,296 +276,6 @@ describe("GrammarSelector", () => {
         await lumine.packages.deactivatePackage("grammar-selector");
 
         expect(updateSubscription.dispose).toHaveBeenCalled();
-      });
-    });
-  });
-
-  // TODO: These tests will need to be altered when we remove legacy
-  // tree-sitter altogether.
-  describe('when language parser is "tree-sitter"', () => {
-    beforeEach(() => {
-      setConfigForLanguageMode("tree-sitter");
-    });
-
-    describe("when grammar-selector:show is triggered", () => {
-      it("displays a list of all the available grammars", async () => {
-        const grammarView = (await getGrammarView(editor)).element;
-
-        // -1 for removing nullGrammar, +1 for adding "Auto Detect"
-        // Tree-sitter names the regex and JSDoc grammars
-        expect(grammarView.querySelectorAll("li:not(.select-list-separator)").length).toBe(
-          lumine.grammars.getGrammars({ includeTreeSitter: true }).filter((g) => g.name).length,
-        );
-        expect(grammarView.querySelectorAll("li:not(.select-list-separator)")[0].textContent).toBe(
-          "Auto Detect",
-        );
-        expect(grammarView.textContent.includes("source.a")).toBe(false);
-        grammarView
-          .querySelectorAll("li:not(.select-list-separator)")
-          .forEach((li) => expect(li.textContent).not.toBe(lumine.grammars.nullGrammar.name));
-        if (!lumine.config.get("grammar-selector.hideDuplicateTextMateGrammars")) {
-          // Ensure we're showing and labelling tree-sitter grammars.
-          expect(grammarView.textContent.includes("Tree-sitter")).toBe(true);
-        }
-      });
-    });
-
-    describe("when toggling hideDuplicateTextMateGrammars", () => {
-      it("shows only the preferred if true and several exist (and preferred is default)", async () => {
-        lumine.config.set("grammar-selector.hideDuplicateTextMateGrammars", true);
-        const grammarView = await getGrammarView(editor);
-        const observedNames = new Map();
-        // Show a maximum of one grammar (the tree-sitter variant).
-        grammarView.element.querySelectorAll("li:not(.select-list-separator)").forEach((li) => {
-          const name = li.getAttribute("data-grammar");
-          if (!observedNames.has(name)) {
-            observedNames.set(name, 0);
-          }
-          observedNames.set(name, observedNames.get(name) + 1);
-          expect(observedNames.get(name) < 2).toBe(
-            true,
-            `found ${observedNames.get(name)} of ${name}`,
-          );
-        });
-
-        // check the seen JS is actually the Tree-sitter one
-        const list = lumine.workspace.getModalPanels()[0].item;
-        for (const item of list.items) {
-          if (item.name === "JavaScript") {
-            expect(item.constructor.name).toBe("TreeSitterGrammar");
-          }
-        }
-      });
-
-      it("shows only the preferred if true and several exist (and preferred is web-tree-sitter)", async () => {
-        lumine.config.set("grammar-selector.hideDuplicateTextMateGrammars", true);
-        setConfigForLanguageMode("web-tree-sitter", { scopeSelector: ".source.js" });
-        const grammarView = await getGrammarView(editor);
-        const observedNames = new Map();
-        grammarView.element.querySelectorAll("li:not(.select-list-separator)").forEach((li) => {
-          const name = li.getAttribute("data-grammar");
-          if (!observedNames.has(name)) {
-            observedNames.set(name, 0);
-          }
-          observedNames.set(name, observedNames.get(name) + 1);
-          expect(observedNames.get(name) < 2).toBe(
-            true,
-            `found ${observedNames.get(name)} of ${name}`,
-          );
-        });
-
-        // check the seen JS is actually the Tree-sitter one
-        const list = lumine.workspace.getModalPanels()[0].item;
-        for (const item of list.items) {
-          if (item.name === "JavaScript") {
-            expect(item.constructor.name).toBe("TreeSitterGrammar");
-          }
-        }
-      });
-
-      it("shows only the preferred if true and several exist (and preferred is textmate)", async () => {
-        lumine.config.set("grammar-selector.hideDuplicateTextMateGrammars", true);
-        setConfigForLanguageMode("textmate", { scopeSelector: ".source.js" });
-        const grammarView = await getGrammarView(editor);
-        const observedNames = new Map();
-        grammarView.element.querySelectorAll("li:not(.select-list-separator)").forEach((li) => {
-          const name = li.getAttribute("data-grammar");
-          if (!observedNames.has(name)) {
-            observedNames.set(name, 0);
-          }
-          observedNames.set(name, observedNames.get(name) + 1);
-          expect(observedNames.get(name) < 2).toBe(
-            true,
-            `found ${observedNames.get(name)} of ${name}`,
-          );
-        });
-
-        // check the seen JS is actually the Tree-sitter one
-        const list = lumine.workspace.getModalPanels()[0].item;
-        for (const item of list.items) {
-          if (item.name === "JavaScript") {
-            expect(item.constructor.name).toBe("Grammar");
-          }
-        }
-      });
-
-      it("shows both if false (in the proper order when language parser is web-tree-sitter)", async () => {
-        await lumine.packages.activatePackage("language-c"); // punctuation making it sort wrong
-        lumine.config.set("grammar-selector.hideDuplicateTextMateGrammars", false);
-        await getGrammarView(editor);
-        let cppCount = 0;
-
-        const listItems = lumine.workspace.getModalPanels()[0].item.items;
-        for (let i = 0; i < listItems.length; i++) {
-          const grammar = listItems[i];
-          const name = grammar.name;
-          if (cppCount === 0 && name === "C++") {
-            expect(grammar.constructor.name).toBe("TreeSitterGrammar"); // first C++ entry should be Tree-sitter
-            cppCount++;
-          } else if (cppCount === 1) {
-            expect(name).toBe("C++");
-            expect(grammar.constructor.name).toBe("Grammar"); // immediate next grammar should be the TextMate version
-            cppCount++;
-          } else {
-            expect(name).not.toBe("C++");
-          }
-        }
-
-        expect(cppCount).toBe(2); // ensure we actually saw two grammars
-      });
-    });
-
-    describe("for every Tree-sitter grammar", () => {
-      it("adds a label to identify it as Tree-sitter", async () => {
-        lumine.config.set("grammar-selector.hideDuplicateTextMateGrammars", false);
-        const grammarView = await getGrammarView(editor);
-        const elements = grammarView.element.querySelectorAll("li:not(.select-list-separator)");
-        const listItems = lumine.workspace.getModalPanels()[0].item.items;
-        for (let i = 0; i < listItems.length; i++) {
-          let item = listItems[i];
-          let element = elements[i];
-          if (item.constructor.name.includes("TreeSitterGrammar")) {
-            expect(
-              element.childNodes[1].childNodes[0].className.startsWith("grammar-selector-parser"),
-            ).toBe(true);
-          }
-          // Green for the kind the setting prefers, which here is Tree-sitter.
-          // This used to have a `badge-warning` branch first, for a second
-          // Tree-sitter class that has not existed for a long time.
-          if (item.type === "tree-sitter") {
-            expect(element.childNodes[1].childNodes[0].classList.contains("badge-success")).toBe(
-              true,
-            );
-          }
-        }
-      });
-    });
-  });
-
-  // We will not need these tests for long.
-  describe('when language parser is "node-tree-sitter"', () => {
-    beforeEach(() => {
-      setConfigForLanguageMode("node-tree-sitter");
-    });
-
-    describe("when grammar-selector:show is triggered", () => {
-      it("displays a list of all the available grammars ", async () => {
-        const grammarView = (await getGrammarView(editor)).element;
-
-        // -1 for removing nullGrammar, +1 for adding "Auto Detect"
-        // Tree-sitter names the regex and JSDoc grammars
-        expect(grammarView.querySelectorAll("li:not(.select-list-separator)").length).toBe(
-          lumine.grammars.getGrammars({ includeTreeSitter: true }).filter((g) => g.name).length,
-        );
-        expect(grammarView.querySelectorAll("li:not(.select-list-separator)")[0].textContent).toBe(
-          "Auto Detect",
-        );
-        expect(grammarView.textContent.includes("source.a")).toBe(false);
-        grammarView
-          .querySelectorAll("li:not(.select-list-separator)")
-          .forEach((li) => expect(li.textContent).not.toBe(lumine.grammars.nullGrammar.name));
-        // Ensure we're showing and labelling Tree-sitter grammars.
-        expect(grammarView.textContent.includes("Tree-sitter")).toBe(true);
-      });
-    });
-
-    describe("when toggling hideDuplicateTextMateGrammars", () => {
-      it("shows only the Tree-sitter if true and several exist", async () => {
-        // the main JS grammar has both a TextMate and Tree-sitter implementation
-        lumine.config.set("grammar-selector.hideDuplicateTextMateGrammars", true);
-        const grammarView = await getGrammarView(editor);
-        const observedNames = new Map();
-
-        grammarView.element.querySelectorAll("li:not(.select-list-separator)").forEach((li) => {
-          const name = li.getAttribute("data-grammar");
-          if (!observedNames.has(name)) {
-            observedNames.set(name, 0);
-          }
-          observedNames.set(name, observedNames.get(name) + 1);
-          expect(observedNames.get(name) < 2).toBe(
-            true,
-            `found ${observedNames.get(name)} of ${name}`,
-          );
-        });
-
-        // check the seen JS is actually the Tree-sitter one
-        const list = lumine.workspace.getModalPanels()[0].item;
-        for (const item of list.items) {
-          if (item.name === "JavaScript") {
-            expect(item.constructor.name).toBe("TreeSitterGrammar");
-          }
-        }
-      });
-
-      it("shows both if false", async () => {
-        await lumine.packages.activatePackage("language-c");
-        lumine.config.set("grammar-selector.hideDuplicateTextMateGrammars", false);
-        await getGrammarView(editor);
-        let cppCount = 0;
-
-        const listItems = lumine.workspace.getModalPanels()[0].item.items;
-        for (let i = 0; i < listItems.length; i++) {
-          const grammar = listItems[i];
-          const name = grammar.name;
-          if (cppCount === 0 && name === "C++") {
-            expect(grammar.constructor.name).toBe("TreeSitterGrammar"); // next C++ entry should be legacy Tree-sitter
-            cppCount++;
-          } else if (cppCount === 1) {
-            expect(name).toBe("C++");
-            expect(grammar.constructor.name).toBe("Grammar"); // immediate next grammar should be the TextMate version
-            cppCount++;
-          } else {
-            expect(name).not.toBe("C++"); // there should not be any other C++ grammars
-          }
-        }
-
-        expect(cppCount).toBe(2); // ensure we actually saw two grammars
-      });
-    });
-
-    describe("for every Tree-sitter grammar", () => {
-      it("adds a label to identify it as Tree-sitter (when showing duplicate grammars)", async () => {
-        lumine.config.set("grammar-selector.hideDuplicateTextMateGrammars", false);
-        const grammarView = await getGrammarView(editor);
-        const elements = grammarView.element.querySelectorAll("li:not(.select-list-separator)");
-        const listItems = lumine.workspace.getModalPanels()[0].item.items;
-        for (let i = 0; i < listItems.length; i++) {
-          let item = listItems[i];
-          let element = elements[i];
-          if (item.constructor.name.includes("TreeSitterGrammar")) {
-            expect(
-              element.childNodes[1].childNodes[0].className.startsWith("grammar-selector-parser"),
-            ).toBe(true);
-          }
-          if (item.constructor.name === "TreeSitterGrammar") {
-            expect(element.childNodes[1].childNodes[0].classList.contains("badge-success")).toBe(
-              true,
-            );
-          } else if (item.constructor.name === "Grammar") {
-            expect(element.childNodes[1].childNodes[0].classList.contains("badge-info")).toBe(true);
-          }
-        }
-      });
-
-      it("does not add a label to identify it as Tree-sitter (when hiding duplicate grammars)", async () => {
-        lumine.config.set("grammar-selector.hideDuplicateTextMateGrammars", true);
-        const grammarView = await getGrammarView(editor);
-        const elements = grammarView.element.querySelectorAll("li:not(.select-list-separator)");
-        const listItems = lumine.workspace.getModalPanels()[0].item.items;
-        for (let i = 0; i < listItems.length; i++) {
-          let item = listItems[i];
-          let element = elements[i];
-          if (item.constructor.name.includes("TreeSitterGrammar")) {
-            expect(
-              element.childNodes[1].childNodes[0].className.startsWith("grammar-selector-parser"),
-            ).toBe(false);
-          }
-          if (item.type === "tree-sitter") {
-            expect(element.childNodes[1].childNodes[0].classList.contains("badge-success")).toBe(
-              false,
-            );
-          }
-        }
       });
     });
   });
