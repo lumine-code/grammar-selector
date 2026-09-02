@@ -48,7 +48,7 @@ describe("GrammarSelector", () => {
   describe("when the query matches a grammar", () =>
     it("marks the matched characters in the rendered row", async () => {
       const view = await getGrammarView(editor);
-      view.refs.queryEditor.setText("jav");
+      view.getQueryEditor().setText("jav");
       await lumine.views.getNextUpdatePromise();
 
       const matched = view.element.querySelectorAll("li .character-match");
@@ -110,7 +110,7 @@ describe("GrammarSelector", () => {
 
     it("drops the rule once a query ranks the rows instead", async () => {
       const view = await getGrammarView(editor);
-      view.refs.queryEditor.setText("jav");
+      view.getQueryEditor().setText("jav");
       await lumine.views.getNextUpdatePromise();
 
       expect(view.element.querySelector(".select-list-separator")).toBeNull();
