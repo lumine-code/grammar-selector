@@ -9,7 +9,7 @@ describe("GrammarSelector", () => {
 
     await lumine.packages.activatePackage("status-bar");
     await lumine.packages.activatePackage("grammar-selector");
-    await lumine.packages.activatePackage("language-text");
+    await lumine.packages.activatePackage("language-log");
     await lumine.packages.activatePackage("language-javascript");
 
     editor = await lumine.workspace.open(path.join(__dirname, "fixtures", "sample.js"));
@@ -26,7 +26,7 @@ describe("GrammarSelector", () => {
       const grammars = lumine.grammars.getGrammars();
       spyOn(lumine.grammars, "getGrammars").and.returnValue([
         ...grammars,
-        { scopeName: "source.unnamed-injection", type: "tree-sitter" },
+        { scopeName: "source.unnamed-injection", type: "tree-sitter", fileTypes: [] },
       ]);
       const grammarView = (await getGrammarView(editor)).element;
 
