@@ -62,17 +62,20 @@ describe("GrammarSelector", () => {
   describe("when a grammar is selected", () =>
     it("sets the new grammar on the editor", async () => {
       const grammarView = await getGrammarView(editor);
-      grammarView.props.didConfirmSelection(textGrammar);
+      await grammarView.selectItemById(textGrammar.scopeName);
+      await grammarView.confirmSelection();
       expect(editor.getGrammar()).toBe(textGrammar);
     }));
 
   describe("when auto-detect is selected", () => {
     it("restores the auto-detected grammar on the editor", async () => {
       let grammarView = await getGrammarView(editor);
-      grammarView.props.didConfirmSelection(textGrammar);
+      await grammarView.selectItemById(textGrammar.scopeName);
+      await grammarView.confirmSelection();
       expect(editor.getGrammar()).toBe(textGrammar);
       grammarView = await getGrammarView(editor);
-      grammarView.props.didConfirmSelection(grammarView.items[0]);
+      await grammarView.selectItemById("auto-detect");
+      await grammarView.confirmSelection();
       let currentGrammar = editor.getGrammar();
       expect(currentGrammar.scopeName).toBe("source.js");
       expect(currentGrammar.constructor.name).toBe("TreeSitterGrammar");
@@ -98,12 +101,12 @@ describe("GrammarSelector", () => {
   describe("the current grammar's place in the list", () => {
     it("sits directly under Auto Detect, with a rule below it", async () => {
       const view = await getGrammarView(editor);
+      const displayedItems = view.getDisplayedItems();
 
-      expect(view.items[0]).toBe(view.props.items[0]);
-      expect(view.items[0].name).toBe("Auto Detect");
-      expect(view.items[1]).toBe(editor.getGrammar());
+      expect(displayedItems[0].name).toBe("Auto Detect");
+      expect(displayedItems[1]).toBe(editor.getGrammar());
 
-      const separator = view.element.querySelector(".select-list-separator");
+      const separator = view.getElement().querySelector(".select-list-separator");
       expect(separator.previousElementSibling.dataset.grammar).toBe(editor.getGrammar().name);
       expect(separator.previousElementSibling.classList.contains("active")).toBe(true);
     });
@@ -113,7 +116,7 @@ describe("GrammarSelector", () => {
       view.getQueryEditor().setText("jav");
       await lumine.views.getNextUpdatePromise();
 
-      expect(view.element.querySelector(".select-list-separator")).toBeNull();
+      expect(view.getElement().querySelector(".select-list-separator")).toBeNull();
     });
   });
 
@@ -123,7 +126,8 @@ describe("GrammarSelector", () => {
       expect(editor.getGrammar()).not.toBe(jsGrammar);
 
       const grammarView = await getGrammarView(editor);
-      grammarView.props.didConfirmSelection(jsGrammar);
+      await grammarView.selectItemById(jsGrammar.scopeName);
+      await grammarView.confirmSelection();
       expect(editor.getGrammar()).toBe(jsGrammar);
     }));
 
@@ -141,7 +145,8 @@ describe("GrammarSelector", () => {
         const activeGrammarBefore = editor.getGrammar();
 
         const grammarView = await getGrammarView(embedded);
-        grammarView.props.didConfirmSelection(textGrammar);
+        await grammarView.selectItemById(textGrammar.scopeName);
+        await grammarView.confirmSelection();
 
         expect(embedded.getGrammar()).toBe(textGrammar);
         expect(editor.getGrammar()).toBe(activeGrammarBefore);
