@@ -28,7 +28,7 @@ describe("GrammarSelector", () => {
         ...grammars,
         { scopeName: "source.unnamed-injection", type: "tree-sitter", fileTypes: [] },
       ]);
-      const grammarView = (await getGrammarView(editor)).element;
+      const grammarView = (await getGrammarView(editor)).getElement();
 
       let allGrammars = lumine.grammars.getGrammars().filter((g) => g.name);
 
@@ -51,7 +51,7 @@ describe("GrammarSelector", () => {
       view.getQueryEditor().setText("jav");
       await lumine.views.getNextUpdatePromise();
 
-      const matched = view.element.querySelectorAll("li .character-match");
+      const matched = view.getElement().querySelectorAll("li .character-match");
       expect(matched.length).toBeGreaterThan(0);
       // The row highlights the grammar name it is showing, not the raw query.
       expect(Array.from(matched).every((span) => "JavaScript".includes(span.textContent))).toBe(
@@ -85,13 +85,13 @@ describe("GrammarSelector", () => {
   describe("when the editor's current grammar is the null grammar", () => {
     it("displays Auto Detect as the selected grammar", async () => {
       editor.setGrammar(lumine.grammars.nullGrammar);
-      const grammarView = (await getGrammarView(editor)).element;
+      const grammarView = (await getGrammarView(editor)).getElement();
       expect(grammarView.querySelector("li.active").textContent).toBe("Auto Detect");
     });
 
     it("rules off directly under Auto Detect, with nothing to hoist above it", async () => {
       editor.setGrammar(lumine.grammars.nullGrammar);
-      const grammarView = (await getGrammarView(editor)).element;
+      const grammarView = (await getGrammarView(editor)).getElement();
 
       const separator = grammarView.querySelector(".select-list-separator");
       expect(separator.previousElementSibling.textContent).toBe("Auto Detect");
