@@ -267,9 +267,9 @@ describe("GrammarSelector", () => {
       }));
 
     describe("when the package is deactivated", () => {
-      it("removes the view", () => {
+      it("removes the view", async () => {
         spyOn(grammarTile, "destroy");
-        lumine.packages.deactivatePackage("grammar-selector");
+        await lumine.packages.deactivatePackage("grammar-selector");
         expect(grammarTile.destroy).toHaveBeenCalled();
       });
 
