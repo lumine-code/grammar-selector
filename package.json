@@ -25,9 +25,6 @@
   "engines": {
     "lumine": "^1.0.0"
   },
-  "backgroundTips": [
-    "You can change the language used to highlight the current file with {{ 'grammar-selector:show' | keystroke }}"
-  ],
   "scripts": {
     "test": "lumine --test spec",
     "lint": "eslint . --max-warnings 0",
@@ -40,6 +37,13 @@
       "description": "Show the active pane item’s language on the right side of Lumine’s status bar, instead of the left.",
       "type": "boolean",
       "default": true
+    }
+  },
+  "providedServices": {
+    "background-tips.provider": {
+      "versions": {
+        "1.0.0": "provideBackgroundTips"
+      }
     }
   },
   "consumedServices": {
