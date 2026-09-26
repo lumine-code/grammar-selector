@@ -32,9 +32,9 @@ describe("GrammarSelector", () => {
 
       let allGrammars = lumine.grammars.getGrammars().filter((g) => g.name);
 
-      // -1 for removing nullGrammar, +1 for adding "Auto Detect"
+      // +1 for adding "Auto Detect"
       expect(grammarView.querySelectorAll("li:not(.select-list-separator)").length).toBe(
-        allGrammars.length,
+        allGrammars.length + 1,
       );
       expect(grammarView.querySelectorAll("li:not(.select-list-separator)")[0].textContent).toBe(
         "Auto Detect",
