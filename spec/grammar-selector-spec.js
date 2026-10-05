@@ -79,6 +79,77 @@ describe("GrammarSelector", () => {
       let currentGrammar = editor.getGrammar();
       expect(currentGrammar.scopeName).toBe("source.js");
       expect(currentGrammar.constructor.name).toBe("TreeSitterGrammar");
+
+      grammarView = await getGrammarView(editor);
+      expectGrammarSelection(grammarView, "JavaScript", true);
+      expect(grammarView.getSelectedItem().id).toBe("auto-detect");
+    });
+  });
+
+  describe("automatic and manual grammar selection", () => {
+    it("marks Auto Detect as active and identifies the effective grammar separately", async () => {
+      const grammarView = await getGrammarView(editor);
+
+      expect(lumine.grammars.getAssignedLanguageId(editor.getBuffer())).toBeUndefined();
+      expectGrammarSelection(grammarView, "JavaScript", true);
+      expect(grammarView.getSelectedItem().id).toBe("auto-detect");
+      expect(grammarView.getElement().querySelectorAll("li.selected").length).toBe(1);
+    });
+
+    it("distinguishes a manual override from Auto Detect when the grammar does not change", async () => {
+      let grammarView = await getGrammarView(editor);
+      await grammarView.selectItemById(jsGrammar.scopeName);
+      await grammarView.confirmSelection();
+      expect(editor.getGrammar()).toBe(jsGrammar);
+      expect(lumine.grammars.getAssignedLanguageId(editor.getBuffer())).toBe(jsGrammar.scopeName);
+
+      grammarView = await getGrammarView(editor);
+      expectGrammarSelection(grammarView, "JavaScript");
+      expect(grammarView.getSelectedItem()).toBe(jsGrammar);
+      expect(grammarView.getElement().querySelectorAll("li.selected").length).toBe(1);
+      await grammarView.selectItemById("auto-detect");
+      await grammarView.confirmSelection();
+      expect(editor.getGrammar()).toBe(jsGrammar);
+      expect(lumine.grammars.getAssignedLanguageId(editor.getBuffer())).toBeUndefined();
+
+      grammarView = await getGrammarView(editor);
+      expectGrammarSelection(grammarView, "JavaScript", true);
+      expect(grammarView.getSelectedItem().id).toBe("auto-detect");
+    });
+
+    it("clears the previous search before restoring the opening selection", async () => {
+      let grammarView = await getGrammarView(editor);
+      grammarView.getQueryEditor().setText("plain");
+      await lumine.views.getNextUpdatePromise();
+      await grammarView.selectItemById(textGrammar.scopeName);
+      await grammarView.confirmSelection();
+
+      grammarView = await getGrammarView(editor);
+      expect(grammarView.getQuery()).toBe("");
+      expectGrammarSelection(grammarView, "Plain Text");
+      expect(grammarView.getSelectedItem()).toBe(textGrammar);
+      expect(grammarView.getDisplayedItems()[1]).toBe(textGrammar);
+      await grammarView.selectItemById("auto-detect");
+      await grammarView.confirmSelection();
+
+      grammarView = await getGrammarView(editor);
+      grammarView.getQueryEditor().setText("jav");
+      await lumine.views.getNextUpdatePromise();
+      grammarView.requestCancel();
+
+      grammarView = await getGrammarView(editor);
+      expect(grammarView.getQuery()).toBe("");
+      expect(grammarView.getSelectedItem().id).toBe("auto-detect");
+    });
+
+    it("marks Auto Detect and Plain Text for an automatically assigned untitled editor", async () => {
+      editor = await lumine.workspace.open();
+      expect(editor.getGrammar()).toBe(textGrammar);
+
+      const grammarView = await getGrammarView(editor);
+      expectGrammarSelection(grammarView, "Plain Text", true);
+      expect(grammarView.getDisplayedItems()[1]).toBe(textGrammar);
+      expect(grammarView.getSelectedItem().id).toBe("auto-detect");
     });
   });
 
@@ -91,16 +162,52 @@ describe("GrammarSelector", () => {
 
     it("rules off directly under Auto Detect, with nothing to hoist above it", async () => {
       editor.setGrammar(lumine.grammars.nullGrammar);
-      const grammarView = (await getGrammarView(editor)).getElement();
-
-      const separator = grammarView.querySelector(".select-list-separator");
+      const view = await getGrammarView(editor);
+      view.getElement().querySelector("ol.list-group").style.maxHeight = "20px";
+      await conditionPromise(() => view.getElement().querySelector(".select-list-separator"));
+      const separator = view.getElement().querySelector(".select-list-separator");
       expect(separator.previousElementSibling.textContent).toBe("Auto Detect");
     });
   });
 
   describe("the current grammar's place in the list", () => {
+    it("preserves the natural grammar order without a separator when the list fits", async () => {
+      spyOn(lumine.grammars, "getGrammars").and.returnValue([jsGrammar, textGrammar]);
+      const view = await getGrammarView(editor);
+      const scroller = view.getElement().querySelector("ol.list-group");
+      scroller.style.maxHeight = "1000px";
+      await view.update({});
+
+      expect(view.getDisplayedItems().map((grammar) => grammar.name)).toEqual([
+        "Auto Detect",
+        "Plain Text",
+        "JavaScript",
+      ]);
+      expect(view.getElement().querySelector(".select-list-separator")).toBeNull();
+      expectGrammarSelection(view, "JavaScript", true);
+    });
+
+    it("hoists the effective grammar only while the viewport overflows", async () => {
+      spyOn(lumine.grammars, "getGrammars").and.returnValue([jsGrammar, textGrammar]);
+      const view = await getGrammarView(editor);
+      const scroller = view.getElement().querySelector("ol.list-group");
+      scroller.style.maxHeight = "30px";
+      await conditionPromise(() => view.getDisplayedItems()[1] === jsGrammar);
+
+      expect(view.getElement().querySelector(".select-list-separator")).not.toBeNull();
+      expectGrammarSelection(view, "JavaScript", true);
+      scroller.style.maxHeight = "1000px";
+      await conditionPromise(() => view.getDisplayedItems()[1] === textGrammar);
+
+      expect(view.getElement().querySelector(".select-list-separator")).toBeNull();
+      expectGrammarSelection(view, "JavaScript", true);
+      expect(view.getSelectedItem().id).toBe("auto-detect");
+    });
+
     it("sits directly under Auto Detect, with a rule below it", async () => {
       const view = await getGrammarView(editor);
+      view.getElement().querySelector("ol.list-group").style.maxHeight = "20px";
+      await conditionPromise(() => view.getDisplayedItems()[1] === editor.getGrammar());
       const displayedItems = view.getDisplayedItems();
 
       expect(displayedItems[0].name).toBe("Auto Detect");
@@ -108,7 +215,8 @@ describe("GrammarSelector", () => {
 
       const separator = view.getElement().querySelector(".select-list-separator");
       expect(separator.previousElementSibling.dataset.grammar).toBe(editor.getGrammar().name);
-      expect(separator.previousElementSibling.classList.contains("active")).toBe(true);
+      expect(separator.previousElementSibling.classList.contains("auto-selected")).toBe(true);
+      expect(separator.previousElementSibling.classList.contains("active")).toBe(false);
     });
 
     it("drops the rule once a query ranks the rows instead", async () => {
@@ -292,6 +400,18 @@ function getTooltipText(element) {
   return tooltipElement.textContent.trim();
 }
 
+function expectGrammarSelection(view, grammarName, isAutoDetect = false) {
+  const element = view.getElement();
+  const activeRows = Array.from(element.querySelectorAll("li.active"));
+  const automaticRows = Array.from(element.querySelectorAll("li.auto-selected"));
+  expect(activeRows.map((row) => row.dataset.grammar)).toEqual([
+    isAutoDetect ? "Auto Detect" : grammarName,
+  ]);
+  expect(automaticRows.map((row) => row.dataset.grammar)).toEqual(
+    isAutoDetect ? [grammarName] : [],
+  );
+}
+
 function getTooltipKeyBinding(element) {
   return getTooltipElement(element).querySelector(".keystroke")?.textContent;
 }
@@ -308,7 +428,9 @@ async function getGrammarView(editor) {
     throw new Error("Timeout");
   }, 5000);
   lumine.commands.dispatch(editor.getElement(), "grammar-selector:show");
-  await lumine.views.getNextUpdatePromise();
+  await conditionPromise(() => lumine.workspace.getModalPanels()[0]?.isVisible());
+  const view = lumine.workspace.getModalPanels()[0].getItem();
+  await view.update({});
   clearTimeout(timeout);
-  return lumine.workspace.getModalPanels()[0].getItem();
+  return view;
 }
