@@ -2,6 +2,8 @@
 
 Pick the grammar used for syntax highlighting in the current editor.
 
+Fork of [pulsar-edit/pulsar](https://github.com/pulsar-edit/pulsar) (`packages/grammar-selector`).
+
 ## Features
 
 - **Grammar picker**: choose the grammar for the active editor from a searchable list.
