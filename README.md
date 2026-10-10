@@ -10,7 +10,6 @@ Fork of [pulsar-edit/pulsar](https://github.com/pulsar-edit/pulsar) (`packages/g
 - **Current grammar first**: when the list scrolls, the editor's own grammar sits under Auto Detect, ruled off from the rest; shorter lists retain their natural order.
 - **Automatic selection**: keeps the checkmark on Auto Detect and identifies the effective grammar with a separate icon, while manual selection marks only the chosen grammar.
 - **Status bar tile**: shows the active grammar and opens the picker when clicked.
-- **Duplicate handling**: optionally hides non-preferred grammars when several match a scope.
 - **Configurable placement**: shows the grammar tile on the left or right of the status bar.
 
 ## Installation
