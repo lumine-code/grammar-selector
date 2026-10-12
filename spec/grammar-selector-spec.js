@@ -297,6 +297,7 @@ describe("GrammarSelector", () => {
       embedded.setGrammar(textGrammar);
       const item = document.createElement("div");
       item.getTitle = () => "Embedded Host";
+      item.isSingleton = () => true;
       item.getActiveEmbeddedTextEditor = () => embedded;
       item.onDidChangeActiveTextEditors = () => ({ dispose() {} });
 
