@@ -1,3 +1,4 @@
+const windowService = require("./helpers/window-service");
 describe("grammar-selector full-scan status service lifetime", () => {
   let main, hub, consumer, bars, providers, StatusBarView;
   const tiles = (bar) =>
@@ -11,7 +12,7 @@ describe("grammar-selector full-scan status service lifetime", () => {
     StatusBarView = lumine.packages.getActivePackage("status-bar").mainModule.statusBar.constructor;
     await lumine.workspace.open();
     hub = new lumine.packages.serviceHub.constructor();
-    consumer = hub.consume("status-bar", "^1.0.0", (bar) => main.consumeStatusBar(bar));
+    consumer = hub.consume("status-bar", "^2.0.0", (bar) => main.consumeStatusBar(bar));
     bars = [];
     providers = [];
   });
@@ -30,7 +31,7 @@ describe("grammar-selector full-scan status service lifetime", () => {
       bars.push(bar);
       jasmine.attachToDOM(bar.element);
     }
-    const provider = hub.provide("status-bar", "1.0.0", bar);
+    const provider = hub.provide("status-bar", "2.0.0", windowService(bar));
     providers.push(provider);
     return { bar, provider };
   };
@@ -77,7 +78,7 @@ describe("grammar-selector full-scan status service lifetime", () => {
       return tile;
     });
     jasmine.attachToDOM(bar.element);
-    const lease = main.consumeStatusBar(bar);
+    const lease = main.consumeStatusBar(windowService(bar));
     await Promise.resolve();
     expect(tiles(bar).length).toBe(0);
     expect(lumine.tooltips.findTooltips(staged)).toEqual([]);
@@ -128,7 +129,7 @@ describe("grammar-selector full-scan status service lifetime", () => {
     spyOn(tile, "destroy").and.callFake(() => {
       main.activate();
       lumine.commands.dispatch(workspace, "grammar-selector:show");
-      currentLease = main.consumeStatusBar(entry.bar);
+      currentLease = main.consumeStatusBar(windowService(entry.bar));
       destroy();
     });
     main.deactivate();
@@ -154,7 +155,7 @@ describe("grammar-selector full-scan status service lifetime", () => {
       }
       return tile;
     });
-    const lease = main.consumeStatusBar(bar);
+    const lease = main.consumeStatusBar(windowService(bar));
     expect(tiles(bar).length).toBe(1);
     expect(bar.getLeftTiles().length).toBe(1);
     expect(bar.getRightTiles().length).toBe(0);
