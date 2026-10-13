@@ -284,7 +284,9 @@ describe("GrammarSelector", () => {
 
     it("displays the name of the current grammar", () => {
       expect(grammarStatus.textContent).toBe("JavaScript");
-      expect(getTooltipText(grammarStatus)).toBe("Uses the JavaScript grammar");
+      expect(getTooltipText(grammarStatus)).toBe(
+        "Uses the JavaScript grammar. Click to select a grammar.",
+      );
       expect(getTooltipKeyBinding(grammarStatus)).toBe(
         process.platform === "darwin" ? "⌃⇧L" : "Ctrl+Shift+L",
       );
@@ -321,7 +323,9 @@ describe("GrammarSelector", () => {
 
       expect(grammarStatus.textContent).toBe("Plain Text");
       expect(grammarStatus).toBeVisible();
-      expect(getTooltipText(grammarStatus)).toBe("Uses the Plain Text grammar");
+      expect(getTooltipText(grammarStatus)).toBe(
+        "Uses the Plain Text grammar. Click to select a grammar.",
+      );
 
       editor.setGrammar(lumine.grammars.grammarForScopeName("source.js"));
       await lumine.views.getNextUpdatePromise();
@@ -364,7 +368,9 @@ describe("GrammarSelector", () => {
         await lumine.views.getNextUpdatePromise();
 
         expect(grammarStatus.textContent).toBe("Plain Text");
-        expect(getTooltipText(grammarStatus)).toBe("Uses the Plain Text grammar");
+        expect(getTooltipText(grammarStatus)).toBe(
+          "Uses the Plain Text grammar. Click to select a grammar.",
+        );
       }));
 
     describe("when clicked", () =>
