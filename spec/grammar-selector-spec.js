@@ -369,10 +369,9 @@ describe("GrammarSelector", () => {
 
     describe("when clicked", () =>
       it("shows the grammar selector modal", () => {
-        const eventHandler = jasmine.createSpy("eventHandler");
-        lumine.commands.add(editor.getElement(), "grammar-selector:show", eventHandler);
+        const dispatch = spyOn(lumine.commands, "dispatch").and.callThrough();
         grammarStatus.click();
-        expect(eventHandler).toHaveBeenCalled();
+        expect(dispatch).toHaveBeenCalledWith(grammarStatus, "grammar-selector:show");
       }));
 
     describe("when the package is deactivated", () => {

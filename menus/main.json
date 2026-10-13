@@ -9,5 +9,19 @@
         }
       ]
     }
-  ]
+  ],
+  "context-menu": {
+    ".grammar-status": [
+      {
+        "type": "separator"
+      },
+      {
+        "label": "Select Grammar…",
+        "command": "grammar-selector:show"
+      },
+      {
+        "type": "separator"
+      }
+    ]
+  }
 }
