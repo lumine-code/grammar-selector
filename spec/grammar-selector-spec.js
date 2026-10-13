@@ -287,9 +287,7 @@ describe("GrammarSelector", () => {
       expect(getTooltipText(grammarStatus)).toBe(
         "Uses the JavaScript grammar. Click to select a grammar.",
       );
-      expect(getTooltipKeyBinding(grammarStatus)).toBe(
-        process.platform === "darwin" ? "⌃⇧L" : "Ctrl+Shift+L",
-      );
+      expect(getTooltipKeyBinding(grammarStatus)).toBeUndefined();
     });
 
     it("displays the embedded editor's grammar for an item that reports one", async () => {
