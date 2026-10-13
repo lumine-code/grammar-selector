@@ -1,11 +1,30 @@
 {
   "menu": [
     {
-      "label": "Edit",
+      "label": "View",
       "submenu": [
         {
-          "label": "Select Grammar",
-          "command": "grammar-selector:show"
+          "label": "Editor",
+          "submenu": [
+            {
+              "label": "Select Grammar…",
+              "command": "grammar-selector:show"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Packages",
+      "submenu": [
+        {
+          "label": "Grammar Selector",
+          "submenu": [
+            {
+              "label": "Select Grammar…",
+              "command": "grammar-selector:show"
+            }
+          ]
         }
       ]
     }
