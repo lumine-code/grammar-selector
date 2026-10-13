@@ -2,9 +2,10 @@
   "title": "grammar-selector",
   "description": "Choose the language grammar for a file.",
   "recordedOn": "2026-10-13",
-  "sourceRevision": "a046af13f83415a94537e211122ce35e2866ad60",
+  "sourceRevision": "51886a0ba0e4cabaef8acd4f6b50dc39ab385018",
   "mode": "normal",
   "fontSettings": "default",
+  "themeSourceRevision": "6564a9e21899b5541e9c8f8006f9be6d6d72e6ad",
   "images": [
     {
       "file": "demo.png",
