@@ -8,7 +8,9 @@
           "submenu": [
             {
               "label": "Select Grammar…",
-              "command": "grammar-selector:show"
+              "command": "grammar-selector:show",
+              "group": "grammar",
+              "order": 10
             }
           ]
         }
