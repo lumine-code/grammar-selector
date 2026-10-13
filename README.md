@@ -12,6 +12,8 @@ Fork of [pulsar-edit/pulsar](https://github.com/pulsar-edit/pulsar) (`packages/g
 - **Status bar tile**: shows the active grammar and opens the picker when clicked.
 - **Configurable placement**: shows the grammar tile on the left or right of the status bar.
 
+![Choose the language grammar for a file.](.github/demo.png)
+
 ## Installation
 
 To install `grammar-selector` search for it in the Install pane of the Lumine settings, or run the command `lumine --install lumine-code/grammar-selector`.

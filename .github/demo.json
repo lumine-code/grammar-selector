@@ -1,0 +1,16 @@
+{
+  "title": "grammar-selector",
+  "description": "Choose the language grammar for a file.",
+  "recordedOn": "2026-10-13",
+  "sourceRevision": "a046af13f83415a94537e211122ce35e2866ad60",
+  "mode": "normal",
+  "fontSettings": "default",
+  "images": [
+    {
+      "file": "demo.png",
+      "label": "Choose the language grammar for a file.",
+      "width": 1100,
+      "height": 720
+    }
+  ]
+}
