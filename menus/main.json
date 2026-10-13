@@ -17,8 +17,7 @@
       },
       {
         "label": "Select Grammar…",
-        "command": "grammar-selector:show",
-        "mouseBindingLabel": "LMB"
+        "command": "grammar-selector:show"
       },
       {
         "type": "separator"

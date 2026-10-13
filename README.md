@@ -22,7 +22,7 @@ Commands available in `lumine-workspace`:
 
 - `grammar-selector:show`: open the grammar picker for the current editor.
 
-Click the grammar tile to open the grammar picker, or right-click it to select the same action from its context menu.
+Left-click the grammar tile to open the grammar picker, or right-click it to choose the same action from its context menu.
 
 ## Services
 
