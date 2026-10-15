@@ -10,6 +10,7 @@ describe("grammar-selector status action menu", () => {
     editor.setText("first\nsecond\n");
     await conditionPromise(() => tile() && tile().style.display !== "none");
     await lumine.views.getNextUpdatePromise();
+    editor.getElement().focus();
   });
   afterEach(async () => {
     await lumine.workspace.discardEditorWindows();
@@ -27,11 +28,14 @@ describe("grammar-selector status action menu", () => {
     } finally {
       popup.close();
     }
+    const preview = document.createElement("div");
+    preview.tabIndex = -1;
     await lumine.workspace.open({
       getTitle: () => "Preview",
-      element: document.createElement("div"),
+      element: preview,
     });
-    expect(lumine.contextMenu.templateForElement(element)[0].keyBindingLabel).toBe("");
+    preview.focus();
+    expect(lumine.contextMenu.templateForElement(element)[0].keyBindingLabel).toBeUndefined();
   });
 
   it("looks up shortcuts in the tile's window rather than the main editor", async () => {
@@ -47,6 +51,7 @@ describe("grammar-selector status action menu", () => {
       100,
     );
     try {
+      other.getElement().focus();
       const remote = extra.getElement().querySelector(".grammar-status");
       expect(lumine.contextMenu.templateForElement(remote)[0].keyBindingLabel).toBe(
         process.platform === "darwin" ? "⌃⌥1" : "Ctrl+Alt+1",
