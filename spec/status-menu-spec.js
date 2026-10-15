@@ -19,7 +19,7 @@ describe("grammar-selector status action menu", () => {
   it("shows the editor's owned shortcut in the menu and its HTML row", async () => {
     const element = tile();
     const menu = lumine.contextMenu.templateForElement(element);
-    const label = process.platform === "darwin" ? "⌃⇧L" : "Ctrl+Shift+L";
+    const label = process.platform === "darwin" ? "⌘K L" : "Ctrl+K L";
     expect(menu[0].keyBindingLabel).toBe(label);
     const popup = lumine.contextMenu.show(element, menu);
     try {
@@ -52,7 +52,7 @@ describe("grammar-selector status action menu", () => {
         process.platform === "darwin" ? "⌃⌥1" : "Ctrl+Alt+1",
       );
       expect(lumine.contextMenu.templateForElement(tile())[0].keyBindingLabel).toBe(
-        process.platform === "darwin" ? "⌃⇧L" : "Ctrl+Shift+L",
+        process.platform === "darwin" ? "⌘K L" : "Ctrl+K L",
       );
     } finally {
       keys.dispose();

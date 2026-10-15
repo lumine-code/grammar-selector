@@ -288,7 +288,7 @@ describe("GrammarSelector", () => {
         "Uses the JavaScript grammar. Click to select a grammar.",
       );
       expect(getTooltipKeyBinding(grammarStatus)).toBe(
-        process.platform === "darwin" ? "⌃⇧L" : "Ctrl+Shift+L",
+        process.platform === "darwin" ? "⌘K L" : "Ctrl+K L",
       );
     });
 
