@@ -1,7 +1,7 @@
 {
   // :not([mini]) because it sets the file's grammar, and a mini editor has no
-  // file of its own. Shift is explicit and the primary key stays lowercase.
+  // file of its own. The chord leaves split-selections on Ctrl/Cmd+Shift+L.
   "lumine-text-editor:not([mini])": {
-    "ctrl-shift-l": "grammar-selector:show"
+    "cmdorctrl-k l": "grammar-selector:show"
   }
 }
