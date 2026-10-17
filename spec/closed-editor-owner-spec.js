@@ -12,6 +12,7 @@ describe("Grammar picker editor ownership", () => {
     if (lumine.packages.isPackageLoaded("grammar-selector"))
       await lumine.packages.unloadPackage("grammar-selector");
     await lumine.packages.activatePackage("grammar-selector");
+    await lumine.packages.activatePackage("language-text");
     editor = await lumine.workspace.open();
     editor.setText("owned grammar target");
     other = await lumine.workspace.open(undefined, { split: "right" });
@@ -53,5 +54,24 @@ describe("Grammar picker editor ownership", () => {
     expect(editor.isDestroyed()).toBe(false);
     expect(visible()).toBe(false);
     expect(lumine.grammars.getAssignedLanguageId(editor.getBuffer())).toBeUndefined();
+  });
+
+  it("applies repeated choices to its opening editor and releases it on dismissal", async () => {
+    await list.runAction("select-list:toggle-keep-open");
+    await list.selectItemById("text.plain");
+    await list.confirmSelection();
+    expect(visible()).toBe(true);
+    expect(lumine.grammars.getAssignedLanguageId(editor.getBuffer())).toBe("text.plain");
+    expect(list.getElement().querySelector("li.active").dataset.grammar).toBe("Plain Text");
+
+    await list.selectItemById("auto-detect");
+    await list.confirmSelection();
+    expect(visible()).toBe(true);
+    expect(lumine.grammars.getAssignedLanguageId(editor.getBuffer())).toBeUndefined();
+    expect(lumine.grammars.getAssignedLanguageId(other.getBuffer())).toBeUndefined();
+    expect(list.getElement().querySelector("li.active").dataset.grammar).toBe("Auto Detect");
+
+    editor.destroy();
+    expect(visible()).toBe(false);
   });
 });
