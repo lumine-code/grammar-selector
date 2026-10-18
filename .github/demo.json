@@ -1,9 +1,9 @@
 {
   "title": "grammar-selector",
   "description": "Choose the language grammar for a file.",
-  "recordedOn": "2026-10-14",
-  "sourceRevision": "8b20f9fc45dd9be5a6f47c1d9169f8b7e37248ee",
-  "themeSourceRevision": "14a69683b0e3238e2bc128fbfae3866c1e4ee9c6",
+  "recordedOn": "2026-10-18",
+  "sourceRevision": "02ce0da67d882f72eca7410a7b4e4055d21b1e4c",
+  "themeSourceRevision": "45b22049e87256e9327beb0b350e67fe81d7fc81",
   "mode": "normal",
   "fontSettings": "default",
   "scenario": "demo.js",
@@ -11,8 +11,8 @@
   "environment": {
     "platform": "win32",
     "arch": "x64",
-    "electron": "44.7.0",
-    "chrome": "152.0.7977.130",
+    "electron": "44.9.0",
+    "chrome": "152.0.7977.167",
     "devicePixelRatio": 1,
     "locale": "en-GB",
     "fontFamily": "Fira Code, Menlo, DejaVu Sans Mono, Consolas, monospace",
@@ -21,26 +21,27 @@
   },
   "viewport": { "width": 1100, "height": 720 },
   "cornerRadius": 10,
+  "privacy": { "version": 1, "location": "neutral", "textChecked": true },
   "sources": {
     "editor": {
-      "revision": "385bd1b3ac2db600f1c7e077474d9da4d6deebc4",
-      "dirty": true,
-      "workingTreeHash": "0fa935626a1db13861a0b78ef5c3d890e0a6bff80b25da2fac6e9889910defe0"
+      "revision": "10950c83cb6d964aadbcf4036af67c6484c1341d",
+      "dirty": false,
+      "workingTreeHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
     },
     "package": {
-      "revision": "8b20f9fc45dd9be5a6f47c1d9169f8b7e37248ee",
-      "dirty": true,
-      "workingTreeHash": "067d803a78ca9658a67601d7e099b91ec741aad6b0cf8abf695661bc31240a3f"
+      "revision": "02ce0da67d882f72eca7410a7b4e4055d21b1e4c",
+      "dirty": false,
+      "workingTreeHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
     },
     "grammar-selector": {
-      "revision": "8b20f9fc45dd9be5a6f47c1d9169f8b7e37248ee",
-      "dirty": true,
-      "workingTreeHash": "067d803a78ca9658a67601d7e099b91ec741aad6b0cf8abf695661bc31240a3f"
+      "revision": "02ce0da67d882f72eca7410a7b4e4055d21b1e4c",
+      "dirty": false,
+      "workingTreeHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
     },
     "one-theme": {
-      "revision": "14a69683b0e3238e2bc128fbfae3866c1e4ee9c6",
-      "dirty": true,
-      "workingTreeHash": "50ec2f83a6347dd8113870992ec4eb2be4014f3d9e12213c2f51b543f1eca793"
+      "revision": "45b22049e87256e9327beb0b350e67fe81d7fc81",
+      "dirty": false,
+      "workingTreeHash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
     }
   },
   "fixtures": [
@@ -55,7 +56,7 @@
       "label": "Choose the language grammar for a file.",
       "width": 1100,
       "height": 720,
-      "sha256": "82a75d1811d2097894941dd23256b662e92bd37447e2710cade77501dd1feedf"
+      "sha256": "44c9192b475b8accddc15c53a61478b85c6be5520fb700430b8bcfbe80344f01"
     }
   ]
 }
