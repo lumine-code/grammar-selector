@@ -48,8 +48,7 @@ describe("GrammarSelector", () => {
   describe("when the query matches a grammar", () =>
     it("marks the matched characters in the rendered row", async () => {
       const view = await getGrammarView(editor);
-      view.getQueryEditor().setText("jav");
-      await lumine.views.getNextUpdatePromise();
+      await view.setQuery("jav");
 
       const matched = view.getElement().querySelectorAll("li .character-match");
       expect(matched.length).toBeGreaterThan(0);
@@ -119,8 +118,7 @@ describe("GrammarSelector", () => {
 
     it("clears the previous search before restoring the opening selection", async () => {
       let grammarView = await getGrammarView(editor);
-      grammarView.getQueryEditor().setText("plain");
-      await lumine.views.getNextUpdatePromise();
+      await grammarView.setQuery("plain");
       await grammarView.selectItemById(textGrammar.scopeName);
       await grammarView.confirmSelection();
 
@@ -133,8 +131,7 @@ describe("GrammarSelector", () => {
       await grammarView.confirmSelection();
 
       grammarView = await getGrammarView(editor);
-      grammarView.getQueryEditor().setText("jav");
-      await lumine.views.getNextUpdatePromise();
+      await grammarView.setQuery("jav");
       grammarView.requestCancel();
 
       grammarView = await getGrammarView(editor);
@@ -221,8 +218,7 @@ describe("GrammarSelector", () => {
 
     it("drops the rule once a query ranks the rows instead", async () => {
       const view = await getGrammarView(editor);
-      view.getQueryEditor().setText("jav");
-      await lumine.views.getNextUpdatePromise();
+      await view.setQuery("jav");
 
       expect(view.getElement().querySelector(".select-list-separator")).toBeNull();
     });
