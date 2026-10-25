@@ -32,17 +32,19 @@ describe("GrammarSelector", () => {
 
       let allGrammars = lumine.grammars.getGrammars().filter((g) => g.name);
 
-      // +1 for adding "Auto Detect"
+      // "Auto Detect" and "None" are built-in choices outside the parser registry.
       expect(grammarView.querySelectorAll("li:not(.select-list-separator)").length).toBe(
-        allGrammars.length + 1,
+        allGrammars.length + 2,
       );
       expect(grammarView.querySelectorAll("li:not(.select-list-separator)")[0].textContent).toBe(
         "Auto Detect",
       );
       expect(grammarView.textContent).not.toContain("source.unnamed-injection");
-      grammarView
-        .querySelectorAll("li:not(.select-list-separator)")
-        .forEach((li) => expect(li.textContent).not.toBe(lumine.grammars.nullGrammar.name));
+      const noGrammarRows = Array.from(grammarView.querySelectorAll("li")).filter(
+        (li) => li.dataset.grammar === "None",
+      );
+      expect(noGrammarRows.length).toBe(1);
+      expect(noGrammarRows[0].textContent).toBe("None");
     }));
 
   describe("when the query matches a grammar", () =>
@@ -126,7 +128,6 @@ describe("GrammarSelector", () => {
       expect(grammarView.getQuery()).toBe("");
       expectGrammarSelection(grammarView, "Plain Text");
       expect(grammarView.getSelectedItem()).toBe(textGrammar);
-      expect(grammarView.getDisplayedItems()[1]).toBe(textGrammar);
       await grammarView.selectItemById("auto-detect");
       await grammarView.confirmSelection();
 
@@ -145,25 +146,48 @@ describe("GrammarSelector", () => {
 
       const grammarView = await getGrammarView(editor);
       expectGrammarSelection(grammarView, "Plain Text", true);
-      expect(grammarView.getDisplayedItems()[1]).toBe(textGrammar);
       expect(grammarView.getSelectedItem().id).toBe("auto-detect");
     });
   });
 
   describe("when the editor's current grammar is the null grammar", () => {
-    it("displays Auto Detect as the selected grammar", async () => {
+    it("identifies None as the effective grammar while Auto Detect remains selected", async () => {
       editor.setGrammar(lumine.grammars.nullGrammar);
-      const grammarView = (await getGrammarView(editor)).getElement();
-      expect(grammarView.querySelector("li.active").textContent).toBe("Auto Detect");
+      const view = await getGrammarView(editor);
+      expectGrammarSelection(view, "None", true);
+      expect(view.getSelectedItem().id).toBe("auto-detect");
     });
 
-    it("rules off directly under Auto Detect, with nothing to hoist above it", async () => {
+    it("keeps None with Auto Detect above the separator", async () => {
       editor.setGrammar(lumine.grammars.nullGrammar);
       const view = await getGrammarView(editor);
       view.getElement().querySelector("ol.list-group").style.maxHeight = "20px";
       await conditionPromise(() => view.getElement().querySelector(".select-list-separator"));
       const separator = view.getElement().querySelector(".select-list-separator");
-      expect(separator.previousElementSibling.textContent).toBe("Auto Detect");
+      expect(separator.previousElementSibling.textContent).toBe("None");
+    });
+
+    it("selects None explicitly and restores the detected language with Auto Detect", async () => {
+      let view = await getGrammarView(editor);
+      await view.setQuery("none");
+      expect(view.getDisplayedItems()).toEqual([lumine.grammars.nullGrammar]);
+      await view.confirmSelection();
+
+      expect(editor.getGrammar()).toBe(lumine.grammars.nullGrammar);
+      expect(lumine.grammars.getAssignedLanguageId(editor.getBuffer())).toBe(
+        lumine.grammars.nullGrammar.scopeName,
+      );
+
+      view = await getGrammarView(editor);
+      expectGrammarSelection(view, "None");
+      expect(view.getSelectedItem()).toBe(lumine.grammars.nullGrammar);
+      await view.selectItemById("auto-detect");
+      await view.confirmSelection();
+
+      expect(editor.getGrammar()).toBe(jsGrammar);
+      expect(lumine.grammars.getAssignedLanguageId(editor.getBuffer())).toBeUndefined();
+      view = await getGrammarView(editor);
+      expectGrammarSelection(view, "JavaScript", true);
     });
   });
 
@@ -177,6 +201,7 @@ describe("GrammarSelector", () => {
 
       expect(view.getDisplayedItems().map((grammar) => grammar.name)).toEqual([
         "Auto Detect",
+        "None",
         "Plain Text",
         "JavaScript",
       ]);
@@ -194,7 +219,7 @@ describe("GrammarSelector", () => {
       expect(view.getElement().querySelector(".select-list-separator")).not.toBeNull();
       expectGrammarSelection(view, "JavaScript", true);
       scroller.style.maxHeight = "1000px";
-      await conditionPromise(() => view.getDisplayedItems()[1] === textGrammar);
+      await conditionPromise(() => view.getDisplayedItems()[1] === lumine.grammars.nullGrammar);
 
       expect(view.getElement().querySelector(".select-list-separator")).toBeNull();
       expectGrammarSelection(view, "JavaScript", true);
@@ -313,8 +338,17 @@ describe("GrammarSelector", () => {
       }
     });
 
-    it("displays Plain Text when the current grammar is the null grammar", async () => {
-      editor.setGrammar(lumine.grammars.nullGrammar);
+    it("distinguishes None from Plain Text and describes the absence of a grammar", async () => {
+      lumine.grammars.assignGrammar(editor, lumine.grammars.nullGrammar);
+      await lumine.views.getNextUpdatePromise();
+
+      expect(grammarStatus.textContent).toBe("None");
+      expect(grammarStatus).toBeVisible();
+      expect(getTooltipText(grammarStatus)).toBe(
+        "No grammar is selected. Click to select a grammar.",
+      );
+
+      lumine.grammars.assignGrammar(editor, textGrammar);
       await lumine.views.getNextUpdatePromise();
 
       expect(grammarStatus.textContent).toBe("Plain Text");
@@ -322,12 +356,6 @@ describe("GrammarSelector", () => {
       expect(getTooltipText(grammarStatus)).toBe(
         "Uses the Plain Text grammar. Click to select a grammar.",
       );
-
-      editor.setGrammar(lumine.grammars.grammarForScopeName("source.js"));
-      await lumine.views.getNextUpdatePromise();
-
-      expect(grammarStatus.textContent).toBe("JavaScript");
-      expect(grammarStatus).toBeVisible();
     });
 
     it("hides the label when the current grammar is null", async () => {
